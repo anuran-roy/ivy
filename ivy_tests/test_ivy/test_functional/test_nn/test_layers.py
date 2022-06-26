@@ -80,7 +80,7 @@ def test_linear(
     as_variable=st.booleans(),
 )
 def test_dropout(array_shape, dtype, as_variable, fw, device, call):
-    if (fw == "tensorflow" or fw == "torch") and "int" in dtype:
+    if fw in ["tensorflow", "torch"] and "int" in dtype:
         return
     x = np.random.uniform(size=tuple(array_shape)).astype(dtype)
     x = ivy.asarray(x)

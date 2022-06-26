@@ -13,7 +13,7 @@ from ivy.func_wrapper import _wrap_function
 backend_stack = []
 implicit_backend = "numpy"
 ivy_original_dict = ivy.__dict__.copy()
-ivy_original_fn_dict = dict()
+ivy_original_fn_dict = {}
 
 
 class ContextManager:
@@ -27,27 +27,30 @@ class ContextManager:
         unset_backend()
 
 
-_array_types = dict()
-_array_types["numpy"] = "ivy.functional.backends.numpy"
-_array_types["jax.interpreters.xla"] = "ivy.functional.backends.jax"
-_array_types["jaxlib.xla_extension"] = "ivy.functional.backends.jax"
-_array_types["tensorflow.python.framework.ops"] = "ivy.functional.backends.tensorflow"
-_array_types["torch"] = "ivy.functional.backends.torch"
-_array_types["mxnet.ndarray.ndarray"] = "ivy.functional.backends.mxnet"
+_array_types = {
+    "numpy": "ivy.functional.backends.numpy",
+    "jax.interpreters.xla": "ivy.functional.backends.jax",
+    "jaxlib.xla_extension": "ivy.functional.backends.jax",
+    "tensorflow.python.framework.ops": "ivy.functional.backends.tensorflow",
+    "torch": "ivy.functional.backends.torch",
+    "mxnet.ndarray.ndarray": "ivy.functional.backends.mxnet",
+}
 
-_backend_dict = dict()
-_backend_dict["numpy"] = "ivy.functional.backends.numpy"
-_backend_dict["jax"] = "ivy.functional.backends.jax"
-_backend_dict["tensorflow"] = "ivy.functional.backends.tensorflow"
-_backend_dict["torch"] = "ivy.functional.backends.torch"
-_backend_dict["mxnet"] = "ivy.functional.backends.mxnet"
+_backend_dict = {
+    "numpy": "ivy.functional.backends.numpy",
+    "jax": "ivy.functional.backends.jax",
+    "tensorflow": "ivy.functional.backends.tensorflow",
+    "torch": "ivy.functional.backends.torch",
+    "mxnet": "ivy.functional.backends.mxnet",
+}
 
-_backend_reverse_dict = dict()
-_backend_reverse_dict["ivy.functional.backends.numpy"] = "numpy"
-_backend_reverse_dict["ivy.functional.backends.jax"] = "jax"
-_backend_reverse_dict["ivy.functional.backends.tensorflow"] = "tensorflow"
-_backend_reverse_dict["ivy.functional.backends.torch"] = "torch"
-_backend_reverse_dict["ivy.functional.backends.mxnet"] = "mxnet"
+_backend_reverse_dict = {
+    "ivy.functional.backends.numpy": "numpy",
+    "ivy.functional.backends.jax": "jax",
+    "ivy.functional.backends.tensorflow": "tensorflow",
+    "ivy.functional.backends.torch": "torch",
+    "ivy.functional.backends.mxnet": "mxnet",
+}
 
 
 # Backend Getting/Setting #
@@ -82,20 +85,14 @@ def _determine_backend_from_args(args):
         arg_type = type(arg)
         # function is called recursively if arg is a list/tuple
         if arg_type in [list, tuple]:
-            lib = _determine_backend_from_args(arg)
-            if lib:
+            if lib := _determine_backend_from_args(arg):
                 return lib
-        # function is called recursively if arg is a dict
         elif arg_type is dict:
-            lib = _determine_backend_from_args(list(arg.values()))
-            if lib:
+            if lib := _determine_backend_from_args(list(arg.values())):
                 return lib
-        else:
-            # use the _array_types dict to map the module where arg comes from, to the
-            # corresponding Ivy backend
-            if arg.__class__.__module__ in _array_types:
-                module_name = _array_types[arg.__class__.__module__]
-                return importlib.import_module(module_name)
+        elif arg.__class__.__module__ in _array_types:
+            module_name = _array_types[arg.__class__.__module__]
+            return importlib.import_module(module_name)
 
 
 def current_backend(*args, **kwargs):
@@ -135,7 +132,7 @@ def current_backend(*args, **kwargs):
     if backend_stack:
         f = backend_stack[-1]
         if verbosity.level > 0:
-            verbosity.cprint("Using backend from stack: {}".format(f))
+            verbosity.cprint(f"Using backend from stack: {f}")
         return f
 
     # if no global backend exists, we try to infer the backend from the arguments
@@ -144,7 +141,7 @@ def current_backend(*args, **kwargs):
         implicit_backend = f.current_backend_str()
         return f
     if verbosity.level > 0:
-        verbosity.cprint("Using backend from type: {}".format(f))
+        verbosity.cprint(f"Using backend from type: {f}")
     return importlib.import_module(_backend_dict[implicit_backend])
 
 
@@ -174,7 +171,7 @@ def set_backend(backend: str):
     if not backend_stack:
         ivy_original_dict = ivy.__dict__.copy()
     if isinstance(backend, str):
-        temp_stack = list()
+        temp_stack = []
         while backend_stack:
             temp_stack.append(unset_backend())
         backend = importlib.import_module(_backend_dict[backend])
@@ -193,7 +190,7 @@ def set_backend(backend: str):
         ivy.__dict__[k] = _wrap_function(key=k, to_wrap=backend.__dict__[k], original=v)
 
     if verbosity.level > 0:
-        verbosity.cprint("backend stack: {}".format(backend_stack))
+        verbosity.cprint(f"backend stack: {backend_stack}")
     ivy.locks["backend_setter"].release()
 
 
@@ -297,7 +294,7 @@ def unset_backend():
                 v = _wrap_function(k, v, ivy.__dict__[k])
             ivy.__dict__[k] = v
     if verbosity.level > 0:
-        verbosity.cprint("backend stack: {}".format(backend_stack))
+        verbosity.cprint(f"backend stack: {backend_stack}")
     return backend
 
 
@@ -315,12 +312,11 @@ def try_import_ivy_jax(warn=False):
         import ivy.functional.backends.jax
 
         return ivy.functional.backends.jax
-    except (ImportError, ModuleNotFoundError) as e:
+    except ImportError as e:
         if not warn:
             return
         logging.warning(
-            "{}\n\nEither jax or jaxlib appear to not be installed, "
-            "ivy.functional.backends.jax can therefore not be imported.\n".format(e)
+            f"{e}\n\nEither jax or jaxlib appear to not be installed, ivy.functional.backends.jax can therefore not be imported.\n"
         )
 
 
@@ -329,13 +325,11 @@ def try_import_ivy_tf(warn=False):
         import ivy.functional.backends.tensorflow
 
         return ivy.functional.backends.tensorflow
-    except (ImportError, ModuleNotFoundError) as e:
+    except ImportError as e:
         if not warn:
             return
         logging.warning(
-            "{}\n\ntensorflow does not appear to be installed, "
-            "ivy.functional.backends.tensorflow can therefore not be "
-            "imported.\n".format(e)
+            f"{e}\n\ntensorflow does not appear to be installed, ivy.functional.backends.tensorflow can therefore not be imported.\n"
         )
 
 
@@ -344,12 +338,11 @@ def try_import_ivy_torch(warn=False):
         import ivy.functional.backends.torch
 
         return ivy.functional.backends.torch
-    except (ImportError, ModuleNotFoundError) as e:
+    except ImportError as e:
         if not warn:
             return
         logging.warning(
-            "{}\n\ntorch does not appear to be installed, "
-            "ivy.functional.backends.torch can therefore not be imported.\n".format(e)
+            f"{e}\n\ntorch does not appear to be installed, ivy.functional.backends.torch can therefore not be imported.\n"
         )
 
 
@@ -358,12 +351,11 @@ def try_import_ivy_mxnet(warn=False):
         import ivy.functional.backends.mxnet
 
         return ivy.functional.backends.mxnet
-    except (ImportError, ModuleNotFoundError) as e:
+    except ImportError as e:
         if not warn:
             return
         logging.warning(
-            "{}\n\nmxnet does not appear to be installed, "
-            "ivy.functional.backends.mxnet can therefore not be imported.\n".format(e)
+            f"{e}\n\nmxnet does not appear to be installed, ivy.functional.backends.mxnet can therefore not be imported.\n"
         )
 
 
@@ -372,12 +364,11 @@ def try_import_ivy_numpy(warn=False):
         import ivy.functional.backends.numpy
 
         return ivy.functional.backends.numpy
-    except (ImportError, ModuleNotFoundError) as e:
+    except ImportError as e:
         if not warn:
             return
         logging.warning(
-            "{}\n\nnumpy does not appear to be installed, "
-            "ivy.functional.backends.numpy can therefore not be imported.\n".format(e)
+            f"{e}\n\nnumpy does not appear to be installed, ivy.functional.backends.numpy can therefore not be imported.\n"
         )
 
 
@@ -405,5 +396,5 @@ def choose_random_backend(excluded=None):
             excluded.append(f)
             continue
         else:
-            print("\nselected backend: {}\n".format(f))
+            print(f"\nselected backend: {f}\n")
             return f

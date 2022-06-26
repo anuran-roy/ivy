@@ -6,8 +6,7 @@ from typing import Optional
 def argsort(
     x: torch.Tensor, axis: int = -1, descending: bool = False, stable: bool = True
 ) -> torch.Tensor:
-    ret = torch.argsort(x, dim=axis, descending=descending)
-    return ret
+    return torch.argsort(x, dim=axis, descending=descending)
 
 
 def sort(

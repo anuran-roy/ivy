@@ -33,7 +33,7 @@ def test_stack_images(
 ):
     if fw == "torch" and input_dtype == "float16":
         return
-    images = [img for img in ivy.random_normal(shape=shape)]
+    images = list(ivy.random_normal(shape=shape))
     helpers.test_array_function(
         input_dtype,
         as_variable,

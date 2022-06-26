@@ -32,7 +32,7 @@ def _get_shape_of_list(lst, shape=()):
         return shape
     if isinstance(lst[0], Sequence):
         length = len(lst[0])
-        if not all(len(item) == length for item in lst):
+        if any(len(item) != length for item in lst):
             msg = "not all lists have the same length"
             raise ValueError(msg)
     shape += (len(lst),)
@@ -347,7 +347,7 @@ def test_get_num_dims(x0_n_x1_n_res, as_tensor, tensor_fn, device, call, fw):
         assert isinstance(ret, int)
         ret = ivy.array(ret)
     # cardinality test
-    assert list(ret.shape) == []
+    assert not list(ret.shape)
     # value test
     assert np.array_equal(
         ivy.to_numpy(ret), np.asarray(len(np.asarray(object_in).shape), np.int32)
@@ -405,11 +405,10 @@ def test_clip_vector_norm(
     assert np.allclose(
         call(ivy.clip_vector_norm, x, max_norm, p_val), np.array(clipped)
     )
-    if with_out:
-        if not ivy.current_backend_str() in ["tensorflow", "jax"]:
-            # these backends do not support native inplace updates
-            assert ret is out
-            assert ret.data is out.data
+    if with_out and ivy.current_backend_str() not in ["tensorflow", "jax"]:
+        # these backends do not support native inplace updates
+        assert ret is out
+        assert ret.data is out.data
     # compilation test
     if call is helpers.torch_call:
         # pytorch jit cannot compile global variables, in this case MIN_DENOMINATOR
@@ -712,10 +711,9 @@ def test_cumsum(x_n_axis, dtype, with_out, tensor_fn, device, call):
     if with_out:
         if ivy.exists(axis):
             out = ivy.zeros(x.shape)
-            ret = ivy.cumsum(x, axis, out=out)
         else:
             out = ivy.zeros(ivy.reshape(x, (-1,)).shape)
-            ret = ivy.cumsum(x, axis, out=out)
+        ret = ivy.cumsum(x, axis, out=out)
     else:
         ret = ivy.cumsum(x, axis)
     # type test
@@ -728,11 +726,10 @@ def test_cumsum(x_n_axis, dtype, with_out, tensor_fn, device, call):
         np.asarray(ivy.functional.backends.numpy.cumsum(ivy.to_numpy(x), axis)),
     )
     # out test
-    if with_out:
-        if not ivy.current_backend_str() in ["tensorflow", "jax"]:
-            # these backends do not support native inplace updates
-            assert ret is out
-            assert ret.data is out.data
+    if with_out and ivy.current_backend_str() not in ["tensorflow", "jax"]:
+        # these backends do not support native inplace updates
+        assert ret is out
+        assert ret.data is out.data
 
 
 # cumprod
@@ -755,10 +752,9 @@ def test_cumprod(x_n_axis, exclusive, dtype, with_out, tensor_fn, device, call):
     if with_out:
         if ivy.exists(axis):
             out = ivy.zeros(x.shape)
-            ret = ivy.cumprod(x, axis, exclusive=exclusive, out=out)
         else:
             out = ivy.zeros(ivy.reshape(x, (-1,)).shape)
-            ret = ivy.cumprod(x, axis, exclusive=exclusive, out=out)
+        ret = ivy.cumprod(x, axis, exclusive=exclusive, out=out)
     else:
         ret = ivy.cumprod(x, axis, exclusive)
     # type test
@@ -773,11 +769,10 @@ def test_cumprod(x_n_axis, exclusive, dtype, with_out, tensor_fn, device, call):
         ),
     )
     # out test
-    if with_out:
-        if not ivy.current_backend_str() in ["tensorflow", "jax"]:
-            # these backends do not support native inplace updates
-            assert ret is out
-            assert ret.data is out.data
+    if with_out and ivy.current_backend_str() not in ["tensorflow", "jax"]:
+        # these backends do not support native inplace updates
+        assert ret is out
+        assert ret.data is out.data
 
 
 # scatter_flat
@@ -952,11 +947,10 @@ def test_gather(prms_n_inds_n_axis, dtype, with_out, tensor_fn, device, call):
         ),
     )
     # out test
-    if with_out:
-        if not ivy.current_backend_str() in ["tensorflow", "jax"]:
-            # these backends do not support native inplace updates
-            assert ret is out
-            assert ret.data is out.data
+    if with_out and ivy.current_backend_str() not in ["tensorflow", "jax"]:
+        # these backends do not support native inplace updates
+        assert ret is out
+        assert ret.data is out.data
 
 
 # gather_nd

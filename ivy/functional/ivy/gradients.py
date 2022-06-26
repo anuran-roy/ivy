@@ -1,5 +1,6 @@
 """Collection of gradient Ivy functions."""
 
+
 # local
 import ivy
 from typing import Union
@@ -15,7 +16,7 @@ from ivy.func_wrapper import (
 # Extra #
 # ------#
 
-with_grads_stack = list()
+with_grads_stack = []
 
 
 class GradientTracking:
@@ -300,11 +301,7 @@ def optimizer_update(
     """
     inplace = ivy.default(inplace, ivy.inplace_variables_supported())
     deltas = effective_grad * lr
-    if inplace:
-        w = ivy.inplace_decrement(w, deltas)
-    else:
-        w = w - deltas
-
+    w = ivy.inplace_decrement(w, deltas) if inplace else w - deltas
     if stop_gradients:
         return stop_gradient(w, preserve_type=True)
     return w

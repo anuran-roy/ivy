@@ -87,11 +87,11 @@ def _mxnet_init_context(device):  # noqa
     elif device.find("gpu") != -1:
         mx_dev = "gpu"
     else:
-        raise Exception("dev input {} not supported.".format(device))
-    if device.find(":") != -1:
-        mx_dev_id = int(device[device.find(":") + 1 :])
-    else:
-        mx_dev_id = 0
+        raise Exception(f"dev input {device} not supported.")
+    mx_dev_id = (
+        int(device[device.find(":") + 1 :]) if device.find(":") != -1 else 0
+    )
+
     return mx.Context(mx_dev, mx_dev_id)
 
 

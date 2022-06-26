@@ -28,7 +28,7 @@ def stack_images(
     stack_height = (num_images / stack_ratio) ** 0.5
     stack_height_int = math.ceil(stack_height)
     stack_width_int = math.ceil(num_images / stack_height)
-    image_rows = list()
+    image_rows = []
     for i in range(stack_width_int):
         images_to_concat = images[i * stack_height_int : (i + 1) * stack_height_int]
         images_to_concat += [ivy.zeros_like(images[0])] * (
@@ -42,7 +42,7 @@ def linear_resample(x, num_samples, axis=-1):
     x_shape = list(x.shape)
     num_x_dims = len(x_shape)
     axis = axis % num_x_dims
-    x_pre_shape = x_shape[0:axis]
+    x_pre_shape = x_shape[:axis]
     x_pre_size = reduce(mul, x_pre_shape) if x_pre_shape else 1
     num_pre_dims = len(x_pre_shape)
     num_vals = x.shape[axis]

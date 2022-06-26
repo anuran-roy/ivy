@@ -328,11 +328,8 @@ def test_dist_array(
     if as_variable:
         x = ivy.variable(x)
 
-    # devices
-    devices = list()
     dev0 = device
-    devices.append(dev0)
-
+    devices = [dev0]
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)
@@ -349,7 +346,7 @@ def test_dist_array(
     assert x_split[dev0].shape[axis] == math.floor(x.shape[axis] / len(devices))
 
     # value test
-    assert min([ivy.dev(x_sub) == ds for ds, x_sub in x_split.items()])
+    assert min(ivy.dev(x_sub) == ds for ds, x_sub in x_split.items())
 
 
 @given(
@@ -369,10 +366,8 @@ def test_clone_array(array_shape, dtype, as_variable, axis, fw, device, call):
     if as_variable:
         x = ivy.variable(x)
 
-    # devices
-    devices = list()
     dev0 = device
-    devices.append(dev0)
+    devices = [dev0]
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)
@@ -385,7 +380,7 @@ def test_clone_array(array_shape, dtype, as_variable, axis, fw, device, call):
     assert x_split[dev0].shape[axis] == math.floor(x.shape[axis] / len(devices))
 
     # value test
-    assert min([ivy.dev(x_sub) == ds for ds, x_sub in x_split.items()])
+    assert min(ivy.dev(x_sub) == ds for ds, x_sub in x_split.items())
 
 
 @given(
@@ -403,14 +398,12 @@ def test_unify_array(array_shape, dtype, as_variable, fw, device, call):
     # inputs
     xs = np.random.uniform(size=tuple(array_shape)).astype(dtype)
 
-    # devices and inputs
-    devices = list()
     dev0 = device
     if as_variable:
         x = {dev0: ivy.variable(ivy.asarray(xs[0], device=dev0))}
     else:
         x = {dev0: ivy.asarray(xs[0], device=dev0)}
-    devices.append(dev0)
+    devices = [dev0]
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)
@@ -426,9 +419,7 @@ def test_unify_array(array_shape, dtype, as_variable, fw, device, call):
     )
 
     # shape test
-    expected_size = 0
-    for ds in devices:
-        expected_size += x[ds].shape[axis]
+    expected_size = sum(x[ds].shape[axis] for ds in devices)
     assert x_unified.shape[axis] == expected_size
 
     # value test
@@ -447,10 +438,8 @@ def test_dist_nest(args, kwargs, axis, tensor_fn, device, call):
         "b": kwargs["b"],
     }
 
-    # devices
-    devices = list()
     dev0 = device
-    devices.append(dev0)
+    devices = [dev0]
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)
@@ -466,16 +455,13 @@ def test_dist_nest(args, kwargs, axis, tensor_fn, device, call):
 
     # value test
     assert min(
-        [
-            ivy.dev(dist_args_ds[0]) == ds
-            for ds, dist_args_ds in dist_args.at_devs().items()
-        ]
+        ivy.dev(dist_args_ds[0]) == ds
+        for ds, dist_args_ds in dist_args.at_devs().items()
     )
+
     assert min(
-        [
-            ivy.dev(dist_kwargs_ds["a"]) == ds
-            for ds, dist_kwargs_ds in dist_kwargs.at_devs().items()
-        ]
+        ivy.dev(dist_kwargs_ds["a"]) == ds
+        for ds, dist_kwargs_ds in dist_kwargs.at_devs().items()
     )
 
 
@@ -491,10 +477,8 @@ def test_clone_nest(args, kwargs, axis, tensor_fn, device, call):
         "b": kwargs["b"],
     }
 
-    # devices
-    devices = list()
     dev0 = device
-    devices.append(dev0)
+    devices = [dev0]
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)
@@ -510,16 +494,13 @@ def test_clone_nest(args, kwargs, axis, tensor_fn, device, call):
 
     # value test
     assert min(
-        [
-            ivy.dev(dist_args_ds[0]) == ds
-            for ds, dist_args_ds in cloned_args.at_devs().items()
-        ]
+        ivy.dev(dist_args_ds[0]) == ds
+        for ds, dist_args_ds in cloned_args.at_devs().items()
     )
+
     assert min(
-        [
-            ivy.dev(dist_kwargs_ds["a"]) == ds
-            for ds, dist_kwargs_ds in cloned_kwargs.at_devs().items()
-        ]
+        ivy.dev(dist_kwargs_ds["a"]) == ds
+        for ds, dist_kwargs_ds in cloned_kwargs.at_devs().items()
     )
 
 
@@ -528,14 +509,10 @@ def test_clone_nest(args, kwargs, axis, tensor_fn, device, call):
 @pytest.mark.parametrize("axis", [0])
 @pytest.mark.parametrize("tensor_fn", [ivy.array, helpers.var_fn])
 def test_unify_nest(args, kwargs, axis, tensor_fn, device, call):
-    # devices
-    devices = list()
     dev0 = device
-    devices.append(dev0)
-    args_dict = dict()
-    args_dict[dev0] = tensor_fn(args[0][0], dtype="float32", device=dev0)
-    kwargs_dict = dict()
-    kwargs_dict[dev0] = tensor_fn(kwargs["a"][0], dtype="float32", device=dev0)
+    devices = [dev0]
+    args_dict = {dev0: tensor_fn(args[0][0], dtype="float32", device=dev0)}
+    kwargs_dict = {dev0: tensor_fn(kwargs["a"][0], dtype="float32", device=dev0)}
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)

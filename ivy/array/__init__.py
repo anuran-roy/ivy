@@ -97,10 +97,7 @@ class Array(
         self._device = ivy.dev(self._data)
         self._dev_str = ivy.as_ivy_dev(self._device)
         self._pre_repr = "ivy."
-        if "gpu" in self._dev_str:
-            self._post_repr = ", dev={})".format(self._dev_str)
-        else:
-            self._post_repr = ")"
+        self._post_repr = f", dev={self._dev_str})" if "gpu" in self._dev_str else ")"
         self.framework_str = ivy.current_backend_str()
         self._is_variable = ivy.is_variable(self._data)
 
@@ -259,16 +256,11 @@ class Array(
 
     @_native_wrapper
     def __getstate__(self):
-        data_dict = dict()
-
-        # only pickle the native array
-        data_dict["data"] = self.data
-
-        # also store the local ivy framework that created this array
-        data_dict["framework_str"] = self.framework_str
-        data_dict["device_str"] = ivy.as_ivy_dev(self.device)
-
-        return data_dict
+        return {
+            "data": self.data,
+            "framework_str": self.framework_str,
+            "device_str": ivy.as_ivy_dev(self.device),
+        }
 
     @_native_wrapper
     def __setstate__(self, state):

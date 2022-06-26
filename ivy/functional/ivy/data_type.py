@@ -229,9 +229,9 @@ def astype(
 # Extra #
 # ------#
 
-default_dtype_stack = list()
-default_float_dtype_stack = list()
-default_int_dtype_stack = list()
+default_dtype_stack = []
+default_float_dtype_stack = []
+default_int_dtype_stack = []
 
 
 class DefaultDtype:
@@ -379,10 +379,7 @@ def default_int_dtype(
                 ret = ivy.int64
             else:
                 def_dtype = default_dtype()
-                if ivy.is_int_dtype(def_dtype):
-                    ret = def_dtype
-                else:
-                    ret = ivy.int32
+                ret = def_dtype if ivy.is_int_dtype(def_dtype) else ivy.int32
         elif isinstance(input, Number):
             if (
                 input > 9223372036854775807
@@ -394,18 +391,12 @@ def default_int_dtype(
                 ret = ivy.int64
             else:
                 def_dtype = default_dtype()
-                if ivy.is_int_dtype(def_dtype):
-                    ret = def_dtype
-                else:
-                    ret = ivy.int32
+                ret = def_dtype if ivy.is_int_dtype(def_dtype) else ivy.int32
     else:
         global default_int_dtype_stack
         if not default_int_dtype_stack:
             def_dtype = default_dtype()
-            if ivy.is_int_dtype(def_dtype):
-                ret = def_dtype
-            else:
-                ret = "int32"
+            ret = def_dtype if ivy.is_int_dtype(def_dtype) else "int32"
         else:
             ret = default_int_dtype_stack[-1]
     if as_native:
@@ -470,27 +461,18 @@ def default_float_dtype(
                 ret = ivy.float64
             else:
                 def_dtype = default_dtype()
-                if ivy.is_float_dtype(def_dtype):
-                    ret = def_dtype
-                else:
-                    ret = ivy.float32
+                ret = def_dtype if ivy.is_float_dtype(def_dtype) else ivy.float32
         elif isinstance(input, Number):
             if _check_float64(input):
                 ret = ivy.float64
             else:
                 def_dtype = default_dtype()
-                if ivy.is_float_dtype(def_dtype):
-                    ret = def_dtype
-                else:
-                    ret = ivy.float32
+                ret = def_dtype if ivy.is_float_dtype(def_dtype) else ivy.float32
     else:
         global default_float_dtype_stack
         if not default_float_dtype_stack:
             def_dtype = default_dtype()
-            if ivy.is_float_dtype(def_dtype):
-                ret = def_dtype
-            else:
-                ret = "float32"
+            ret = def_dtype if ivy.is_float_dtype(def_dtype) else "float32"
         else:
             ret = default_float_dtype_stack[-1]
     if as_native:
@@ -539,10 +521,7 @@ def default_dtype(
     global default_dtype_stack
     if not default_dtype_stack:
         global default_float_dtype_stack
-        if default_float_dtype_stack:
-            ret = default_float_dtype_stack[-1]
-        else:
-            ret = "float32"
+        ret = default_float_dtype_stack[-1] if default_float_dtype_stack else "float32"
     else:
         ret = default_dtype_stack[-1]
     if as_native:
@@ -657,21 +636,18 @@ def is_int_dtype(
     elif isinstance(dtype_in, np.ndarray):
         return "int" in dtype_in.dtype.name
     elif isinstance(dtype_in, Number):
-        return (
-            True
-            if isinstance(dtype_in, (int, np.integer))
-            and not isinstance(dtype_in, bool)
-            else False
+        return isinstance(dtype_in, (int, np.integer)) and not isinstance(
+            dtype_in, bool
         )
+
     elif isinstance(dtype_in, (list, tuple, dict)):
-        return (
-            True
-            if ivy.nested_indices_where(
+        return bool(
+            ivy.nested_indices_where(
                 dtype_in,
-                lambda x: isinstance(x, (int, np.integer)) and not type(x) == bool,
+                lambda x: isinstance(x, (int, np.integer)) and type(x) != bool,
             )
-            else False
         )
+
     return "int" in as_ivy_dtype(dtype_in)
 
 
@@ -698,15 +674,14 @@ def is_float_dtype(
     elif isinstance(dtype_in, np.ndarray):
         return "float" in dtype_in.dtype.name
     elif isinstance(dtype_in, Number):
-        return True if isinstance(dtype_in, (float, np.floating)) else False
+        return isinstance(dtype_in, (float, np.floating))
     elif isinstance(dtype_in, (list, tuple, dict)):
-        return (
-            True
-            if ivy.nested_indices_where(
+        return bool(
+            ivy.nested_indices_where(
                 dtype_in, lambda x: isinstance(x, (float, np.floating))
             )
-            else False
         )
+
     return "float" in as_ivy_dtype(dtype_in)
 
 

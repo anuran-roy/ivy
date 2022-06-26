@@ -7,9 +7,7 @@ import warnings
 
 
 def variable(x):
-    if not x.is_leaf:
-        return x.detach().requires_grad_()
-    return x.clone().requires_grad_()
+    return x.clone().requires_grad_() if x.is_leaf else x.detach().requires_grad_()
 
 
 def is_variable(x, exclusive: bool = False):

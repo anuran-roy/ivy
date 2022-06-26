@@ -131,6 +131,8 @@ def as_ivy_dtype(dtype_in):
 
 
 def as_native_dtype(dtype_in):
-    if not isinstance(dtype_in, str):
-        return dtype_in
-    return native_dtype_dict[ivy.Dtype(dtype_in)]
+    return (
+        native_dtype_dict[ivy.Dtype(dtype_in)]
+        if isinstance(dtype_in, str)
+        else dtype_in
+    )

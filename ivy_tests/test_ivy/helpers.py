@@ -1,5 +1,6 @@
 """Collection of helpers for ivy unit tests."""
 
+
 # global
 import importlib
 from contextlib import redirect_stdout
@@ -20,7 +21,7 @@ except (ImportError, RuntimeError, AttributeError):
 try:
     import tensorflow as tf
 
-    _tf_version = float(".".join(tf.__version__.split(".")[0:2]))
+    _tf_version = float(".".join(tf.__version__.split(".")[:2]))
     if _tf_version >= 2.3:
         # noinspection PyPep8Naming,PyUnresolvedReferences
         from tensorflow.python.types.core import Tensor as tensor_type
@@ -107,7 +108,7 @@ _excluded = []
 def _convert_vars(
     vars_in, from_type, to_type_callable=None, keep_other=True, to_type=None
 ):
-    new_vars = list()
+    new_vars = []
     for var in vars_in:
         if type(var) in _iterable_types:
             return_val = _convert_vars(var, from_type, to_type_callable)
@@ -116,7 +117,7 @@ def _convert_vars(
             if isinstance(var, np.ndarray):
                 if var.dtype == np.float64:
                     var = var.astype(np.float32)
-                if bool(sum([stride < 0 for stride in var.strides])):
+                if bool(sum(stride < 0 for stride in var.strides)):
                     var = var.copy()
             if to_type_callable:
                 new_vars.append(to_type_callable(var))
@@ -223,14 +224,12 @@ def trim(docstring):
     # Determine minimum indentation (first line doesn't count):
     indent = sys.maxsize
     for line in lines[1:]:
-        stripped = line.lstrip()
-        if stripped:
+        if stripped := line.lstrip():
             indent = min(indent, len(line) - len(stripped))
     # Remove indentation (first line is special):
     trimmed = [lines[0].strip()]
     if indent < sys.maxsize:
-        for line in lines[1:]:
-            trimmed.append(line[indent:].rstrip())
+        trimmed.extend(line[indent:].rstrip() for line in lines[1:])
     # Strip off trailing and leading blank lines:
     while trimmed and not trimmed[-1]:
         trimmed.pop()
@@ -323,10 +322,12 @@ def docstring_examples_run(fn):
     print("Putput: ", parsed_output)
 
     # assert output == parsed_output, "Output is unequal to the docstrings output."
-    if not (output == parsed_output):
+    if output != parsed_output:
         ivy.warn(
-            "Output is unequal to the docstrings output: %s" % fn_name, stacklevel=0
+            f"Output is unequal to the docstrings output: {fn_name}",
+            stacklevel=0,
         )
+
     return True
 
 
@@ -341,13 +342,11 @@ def exclude(exclusion_list):
 
 def frameworks():
     return list(
-        set(
-            [
-                ivy_fw()
-                for fw_str, ivy_fw in _ivy_fws_dict.items()
-                if ivy_fw() is not None and fw_str not in _excluded
-            ]
-        )
+        {
+            ivy_fw()
+            for fw_str, ivy_fw in _ivy_fws_dict.items()
+            if ivy_fw() is not None and fw_str not in _excluded
+        }
     )
 
 
@@ -373,11 +372,11 @@ def assert_all_close(x, y, rtol=1e-05, atol=1e-08):
     else:
         assert np.allclose(
             np.nan_to_num(x), np.nan_to_num(y), rtol=rtol, atol=atol
-        ), "{} != {}".format(x, y)
+        ), f"{x} != {y}"
 
 
 def kwargs_to_args_n_kwargs(num_positional_args, kwargs):
-    args = [v for v in list(kwargs.values())[:num_positional_args]]
+    args = list(list(kwargs.values())[:num_positional_args])
     kwargs = {k: kwargs[k] for k in list(kwargs.keys())[num_positional_args:]}
     return args, kwargs
 
@@ -757,8 +756,8 @@ def test_array_function(
         ]
         arg_is_instance = is_instance[:num_arg_vals]
         kwarg_is_instance = is_instance[num_arg_vals:]
+        i = 0
         if arg_is_instance and max(arg_is_instance):
-            i = 0
             for i, a in enumerate(arg_is_instance):
                 if a:
                     break
@@ -767,7 +766,6 @@ def test_array_function(
             args = ivy.copy_nest(args, to_mutable=True)
             ivy.prune_nest_at_index(args, instance_idx)
         else:
-            i = 0
             for i, a in enumerate(kwarg_is_instance):
                 if a:
                     break

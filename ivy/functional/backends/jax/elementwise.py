@@ -8,16 +8,14 @@ from ivy.functional.backends.jax import JaxArray
 
 
 def _cast_for_bitwise_op(x1, x2):
-    if not isinstance(x1, int):
-        if isinstance(x2, int):
-            x2 = jnp.asarray(x2, dtype=x1.dtype)
+    if not isinstance(x1, int) and isinstance(x2, int):
+        x2 = jnp.asarray(x2, dtype=x1.dtype)
     return x1, x2
 
 
 def _cast_for_binary_op(x1, x2):
-    if not isinstance(x1, (int, float)):
-        if isinstance(x2, (int, float)):
-            x2 = jnp.asarray(x2, dtype=x1.dtype)
+    if not isinstance(x1, (int, float)) and isinstance(x2, (int, float)):
+        x2 = jnp.asarray(x2, dtype=x1.dtype)
     return x1, x2
 
 
@@ -88,10 +86,7 @@ def bitwise_xor(x1: Union[int, JaxArray], x2: Union[int, JaxArray]) -> JaxArray:
 
 
 def ceil(x: JaxArray) -> JaxArray:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return jnp.ceil(x)
+    return x if "int" in str(x.dtype) else jnp.ceil(x)
 
 
 def cos(x: JaxArray) -> JaxArray:
@@ -120,10 +115,7 @@ def expm1(x: JaxArray) -> JaxArray:
 
 
 def floor(x: JaxArray) -> JaxArray:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return jnp.floor(x)
+    return x if "int" in str(x.dtype) else jnp.floor(x)
 
 
 def floor_divide(x1: Union[float, JaxArray], x2: Union[float, JaxArray]) -> JaxArray:
@@ -224,10 +216,7 @@ def remainder(x1: Union[float, JaxArray], x2: Union[float, JaxArray]) -> JaxArra
 
 
 def round(x: JaxArray, out: Optional[JaxArray] = None) -> JaxArray:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return jnp.round(x)
+    return x if "int" in str(x.dtype) else jnp.round(x)
 
 
 def sign(x: JaxArray) -> JaxArray:
@@ -264,10 +253,7 @@ def tanh(x: JaxArray) -> JaxArray:
 
 
 def trunc(x: JaxArray) -> JaxArray:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return jnp.trunc(x)
+    return x if "int" in str(x.dtype) else jnp.trunc(x)
 
 
 # Extra #

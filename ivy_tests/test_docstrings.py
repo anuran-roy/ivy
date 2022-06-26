@@ -10,7 +10,7 @@ import ivy_tests.test_ivy.helpers as helpers
 def test_docstrings(backend):
     ivy.set_default_device("cpu")
     ivy.set_backend(backend)
-    failures = list()
+    failures = []
     success = True
 
     """ 

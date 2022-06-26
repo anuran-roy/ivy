@@ -1,5 +1,6 @@
 """Collection of general Ivy functions."""
 
+
 # global
 import gc
 import math
@@ -21,7 +22,7 @@ from ivy.func_wrapper import (
     handle_nestable,
 )
 
-FN_CACHE = dict()
+FN_CACHE = {}
 INF = float("inf")
 TIMEOUT = 15.0
 TMP_DIR = "/tmp"
@@ -58,12 +59,16 @@ def get_referrers_recursive(
         for ref in gc.get_referrers(item)
         if not (
             isinstance(ref, dict)
-            and min([k in ref for k in ["depth", "max_depth", "seen_set", "local_set"]])
+            and min(
+                k in ref
+                for k in ["depth", "max_depth", "seen_set", "local_set"]
+            )
         )
     ]
-    local_set.add(str(id(referrers)))
+
+    local_set.add(id(referrers))
     for ref in referrers:
-        ref_id = str(id(ref))
+        ref_id = id(ref)
         if ref_id in local_set or hasattr(ref, "cell_contents"):
             continue
         seen = ref_id in seen_set
@@ -83,7 +88,7 @@ def get_referrers_recursive(
                 val[k] = v
         else:
             val = this_repr
-        ret_cont[str(ref_id)] = val
+        ret_cont[ref_id] = val
     return ret_cont
 
 
@@ -497,10 +502,7 @@ def arrays_equal(xs: List[Union[ivy.Array, ivy.NativeArray]]) -> bool:
 
     """
     x0 = xs[0]
-    for x in xs[1:]:
-        if not array_equal(x0, x):
-            return False
-    return True
+    return all(array_equal(x0, x) for x in xs[1:])
 
 
 @to_native_arrays_and_back
@@ -542,10 +544,7 @@ def all_equal(
                 mat[j][i] = res
         return ivy.array(mat)
     x0 = xs[0]
-    for x in xs[1:]:
-        if not equality_fn(x0, x):
-            return False
-    return True
+    return all(equality_fn(x0, x) for x in xs[1:])
 
 
 @inputs_to_native_arrays
@@ -1034,10 +1033,7 @@ def clip_vector_norm(
     """
     norm = ivy.vector_norm(x, keepdims=True, ord=p)
     ratio = ivy.stable_divide(max_norm, norm)
-    if ratio < 1:
-        ret = ratio * x
-    else:
-        ret = x
+    ret = ratio * x if ratio < 1 else x
     if ivy.exists(out):
         return ivy.inplace_update(out, ret)
     return ret
@@ -1171,23 +1167,22 @@ def fourier_encode(
     orig_x = x
     if linear:
         scales = ivy.linspace(1.0, max_freq / 2, num_bands, device=dev(x))
+    elif ivy.backend == "torch" and isinstance(max_freq, float):
+        scales = ivy.logspace(
+            0.0,
+            ivy.log(ivy.array(max_freq / 2)) / math.log(10),
+            num_bands,
+            base=10,
+            device=dev(x),
+        )
     else:
-        if ivy.backend == "torch" and isinstance(max_freq, float):
-            scales = ivy.logspace(
-                0.0,
-                ivy.log(ivy.array(max_freq / 2)) / math.log(10),
-                num_bands,
-                base=10,
-                device=dev(x),
-            )
-        else:
-            scales = ivy.logspace(
-                0.0,
-                ivy.log(max_freq / 2) / math.log(10),
-                num_bands,
-                base=10,
-                device=dev(x),
-            )
+        scales = ivy.logspace(
+            0.0,
+            ivy.log(max_freq / 2) / math.log(10),
+            num_bands,
+            base=10,
+            device=dev(x),
+        )
     scales = ivy.astype(scales, ivy.dtype(x))
     scales = scales[(*((None,) * (len(x.shape) - len(scales.shape))), Ellipsis)]
     x = x * scales * math.pi
@@ -1223,7 +1218,7 @@ def value_is_nan(
 
     """
     x_scalar = ivy.to_scalar(x) if ivy.is_native_array(x) else x
-    if not x_scalar == x_scalar:
+    if x_scalar != x_scalar:
         return True
     if include_infs and x_scalar == INF or x_scalar == -INF:
         return True
@@ -1365,9 +1360,7 @@ def default(
     """
     with_callable = catch_exceptions or with_callable
     if rev:
-        tmp = x
-        x = default_val
-        default_val = tmp
+        x, default_val = default_val, x
     if with_callable:
         x_callable = callable(x)
         default_callable = callable(default_val)
@@ -1400,10 +1393,7 @@ def shape_to_tuple(shape: Union[int, Tuple[int], List[int]]):
     """
     if ivy.is_array(shape):
         raise Exception("shape_to_tuple does not accept arrays as input")
-    if isinstance(shape, int):
-        return shape
-    else:
-        return tuple(shape)
+    return shape if isinstance(shape, int) else tuple(shape)
 
 
 @handle_nestable
@@ -1450,12 +1440,12 @@ def match_kwargs(kwargs, *receivers, allow_duplicates=False):
         Sequence of keyword arguments split as best as possible.
 
     """
-    split_kwargs = list()
+    split_kwargs = []
     for receiver in receivers:
         expected_kwargs = arg_names(receiver)
         found_kwargs = {k: v for k, v in kwargs.items() if k in expected_kwargs}
         if not allow_duplicates:
-            for k in found_kwargs.keys():
+            for k in found_kwargs:
                 del kwargs[k]
         split_kwargs.append(found_kwargs)
     if len(split_kwargs) == 1:
@@ -1493,10 +1483,12 @@ def cache_fn(func: Callable) -> Callable:
 
         """
         key = "".join(
-            [str(i) + ", " for i in args]
-            + [" kw, "]
-            + [str(i) + ", " for i in sorted(kwargs.items())]
+            (
+                ([f"{str(i)}, " for i in args] + [" kw, "])
+                + [f"{str(i)}, " for i in sorted(kwargs.items())]
+            )
         )
+
         cache = FN_CACHE[func]
         if key in cache:
             return cache[key]
@@ -1716,7 +1708,7 @@ def stable_pow(base: Any, exponent: Any, min_base: float = None) -> Any:
 
 def get_all_arrays_in_memory():
     """Gets all arrays which are currently alive."""
-    all_arrays = list()
+    all_arrays = []
     for obj in gc.get_objects():
         # noinspection PyBroadException
         try:
@@ -1872,10 +1864,9 @@ def assert_supports_inplace(x):
     """
     if not ivy.supports_inplace(x):
         raise Exception(
-            "Inplace operations are not supported {} types with {} backend".format(
-                type(x), ivy.current_backend_str()
-            )
+            f"Inplace operations are not supported {type(x)} types with {ivy.current_backend_str()} backend"
         )
+
     return True
 
 

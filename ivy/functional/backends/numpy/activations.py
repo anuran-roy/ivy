@@ -1,5 +1,6 @@
 """Collection of Numpy activation functions, wrapped to fit Ivy syntax and signature."""
 
+
 from typing import Optional
 
 # global
@@ -8,7 +9,7 @@ import numpy as np
 
 try:
     from scipy.special import erf
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     erf = None
 
 

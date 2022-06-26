@@ -33,9 +33,10 @@ def main():
             pass
 
     unique_names = set(all_names)
-    count = {}
-    for name in unique_names:
-        count[name] = int(all_names.count(name) * 100 / len(all_names))
+    count = {
+        name: int(all_names.count(name) * 100 / len(all_names))
+        for name in unique_names
+    }
 
     # Assigning an intern evenly based on it's percentage. The lower the percentage,
     # the bigger the chance to get assigned. This way the workload is spread evenly.

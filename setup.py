@@ -34,12 +34,12 @@ def _replace_logos_html(txt):
         ".. image:: https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/logos/supported/frameworks.png?raw=true\n"  # noqa
         "   :width: 100%"
     )
-    backends_chunk = "\n\n".join(bc[0:1] + [img_str] + bc[2:])
+    backends_chunk = "\n\n".join(bc[:1] + [img_str] + bc[2:])
 
     # re-join
     return "".join(
         [
-            ".. raw:: html".join(chunks[0:2]),
+            ".. raw:: html".join(chunks[:2]),
             backends_chunk,
             ".. raw:: html".join(chunks[2:]),
         ]

@@ -1279,16 +1279,13 @@ class LSTM(Module):
 
         """
         batch_shape = list(batch_shape)
-        return (
-            [
-                ivy.zeros((batch_shape + [self._output_channels]), dtype=dtype)
-                for i in range(self._num_layers)
-            ],
-            [
-                ivy.zeros((batch_shape + [self._output_channels]), dtype=dtype)
-                for i in range(self._num_layers)
-            ],
-        )
+        return [
+            ivy.zeros((batch_shape + [self._output_channels]), dtype=dtype)
+            for _ in range(self._num_layers)
+        ], [
+            ivy.zeros((batch_shape + [self._output_channels]), dtype=dtype)
+            for _ in range(self._num_layers)
+        ]
 
     # Overridden
 
@@ -1307,7 +1304,7 @@ class LSTM(Module):
         """
         input_weights = dict(
             zip(
-                ["layer_" + str(i) for i in range(self._num_layers)],
+                [f"layer_{str(i)}" for i in range(self._num_layers)],
                 [
                     {
                         "w": self._w_init.create_variables(
@@ -1327,9 +1324,10 @@ class LSTM(Module):
                 ],
             )
         )
+
         recurrent_weights = dict(
             zip(
-                ["layer_" + str(i) for i in range(self._num_layers)],
+                [f"layer_{str(i)}" for i in range(self._num_layers)],
                 [
                     {
                         "w": self._w_init.create_variables(
@@ -1344,6 +1342,7 @@ class LSTM(Module):
                 ],
             )
         )
+
         return {"input": input_weights, "recurrent": recurrent_weights}
 
     def _forward(self, inputs, initial_state=None):
@@ -1369,8 +1368,8 @@ class LSTM(Module):
             initial_state = self.get_initial_state(
                 inputs.shape[:-2], dtype=inputs.dtype
             )
-        h_n_list = list()
-        c_n_list = list()
+        h_n_list = []
+        c_n_list = []
         h_t = inputs
         for h_0, c_0, (_, lstm_input_var), (_, lstm_recurrent_var) in zip(
             initial_state[0],

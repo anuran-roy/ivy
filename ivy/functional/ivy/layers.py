@@ -426,11 +426,7 @@ def multi_head_attention(
         kv = ivy.split(context, 2, -1)
 
     # BS x K x (HxF),  BS x K x (HxF)
-    if isinstance(kv, tuple):
-        k, v = kv
-    else:
-        k, v = ivy.split(kv, 2, -1)
-
+    k, v = kv if isinstance(kv, tuple) else ivy.split(kv, 2, -1)
     # BS x H x Q x F,  BS x H x K x F,  BS x H x K x F
     q, k, v = map(
         lambda t: ivy.einops_rearrange(t, "... n (h f) -> ... h n f", h=num_heads),
@@ -1014,7 +1010,7 @@ def lstm_update(
     ct = init_c
 
     # lstm outputs
-    hts_list = list()
+    hts_list = []
 
     # unrolled time dimension with lstm steps
     for Wii_xt, Wif_xt, Wig_xt, Wio_xt in zip(

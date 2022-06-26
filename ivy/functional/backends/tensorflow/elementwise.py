@@ -21,10 +21,7 @@ def _cast_for_binary_op(x1, x2):
 
 
 def abs(x: Union[float, tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if "uint" in ivy.dtype(x):
-        return x
-    else:
-        return tf.abs(x)
+    return x if "uint" in ivy.dtype(x) else tf.abs(x)
 
 
 def acos(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
@@ -44,8 +41,7 @@ def add(
 
 
 def asin(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    ret = tf.asin(x)
-    return ret
+    return tf.asin(x)
 
 
 def asinh(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
@@ -82,10 +78,7 @@ def bitwise_and(
 def bitwise_invert(
     x: Union[int, tf.Tensor, tf.Variable]
 ) -> Union[tf.Tensor, tf.Variable]:
-    if "int" not in str(x.dtype):
-        return tf.logical_not(x)
-    else:
-        return tf.bitwise.invert(x)
+    return tf.logical_not(x) if "int" not in str(x.dtype) else tf.bitwise.invert(x)
 
 
 def bitwise_left_shift(
@@ -127,10 +120,7 @@ def bitwise_xor(
 
 
 def ceil(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return tf.math.ceil(x)
+    return x if "int" in str(x.dtype) else tf.math.ceil(x)
 
 
 def cos(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
@@ -166,10 +156,7 @@ def expm1(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
 
 
 def floor(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return tf.math.floor(x)
+    return x if "int" in str(x.dtype) else tf.math.floor(x)
 
 
 def floor_divide(
@@ -204,17 +191,11 @@ def isfinite(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
 
 
 def isinf(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if ivy.is_int_dtype(x):
-        return tf.zeros_like(x, tf.bool)
-    else:
-        return tf.math.is_inf(x)
+    return tf.zeros_like(x, tf.bool) if ivy.is_int_dtype(x) else tf.math.is_inf(x)
 
 
 def isnan(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if ivy.is_int_dtype(x):
-        return tf.zeros_like(x, tf.bool)
-    else:
-        return tf.math.is_nan(x)
+    return tf.zeros_like(x, tf.bool) if ivy.is_int_dtype(x) else tf.math.is_nan(x)
 
 
 def less(
@@ -313,18 +294,21 @@ def pow(
     x2: Union[float, tf.Tensor, tf.Variable],
 ) -> Union[tf.Tensor, tf.Variable]:
     x1, x2 = _cast_for_binary_op(x1, x2)
-    if isinstance(x1, tf.Tensor) and isinstance(x2, tf.Tensor):
-        if x1.dtype.is_unsigned or x2.dtype.is_unsigned:
-            promoted_type = tf.experimental.numpy.promote_types(x1.dtype, x2.dtype)
-            if x1.dtype.is_unsigned:
-                x1 = tf.cast(x1, tf.float64)
-            if x2.dtype.is_unsigned:
-                x2 = tf.cast(x2, tf.float64)
-            return tf.cast(tf.experimental.numpy.power(x1, x2), promoted_type)
+    if (
+        isinstance(x1, tf.Tensor)
+        and isinstance(x2, tf.Tensor)
+        and (x1.dtype.is_unsigned or x2.dtype.is_unsigned)
+    ):
+        promoted_type = tf.experimental.numpy.promote_types(x1.dtype, x2.dtype)
+        if x1.dtype.is_unsigned:
+            x1 = tf.cast(x1, tf.float64)
+        if x2.dtype.is_unsigned:
+            x2 = tf.cast(x2, tf.float64)
+        return tf.cast(tf.experimental.numpy.power(x1, x2), promoted_type)
     return tf.experimental.numpy.power(x1, x2)
 
 
-pow.unsupported_dtypes = tuple([ivy.uint8, ivy.uint16, ivy.uint32, ivy.uint64])
+pow.unsupported_dtypes = ivy.uint8, ivy.uint16, ivy.uint32, ivy.uint64
 
 
 def remainder(
@@ -336,10 +320,7 @@ def remainder(
 
 
 def round(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if "int" in str(x.dtype):
-        return x
-    else:
-        return tf.round(x)
+    return x if "int" in str(x.dtype) else tf.round(x)
 
 
 def sign(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
@@ -357,11 +338,10 @@ def sinh(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
 
 
 def sqrt(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    if x.dtype == "float32":
-        x_64 = tf.cast(x, tf.float64)
-        return tf.cast(tf.sqrt(x_64), x.dtype)
-    else:
+    if x.dtype != "float32":
         return tf.math.sqrt(x)
+    x_64 = tf.cast(x, tf.float64)
+    return tf.cast(tf.sqrt(x_64), x.dtype)
 
 
 def square(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:

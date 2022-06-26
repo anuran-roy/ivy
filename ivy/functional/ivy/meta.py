@@ -65,15 +65,14 @@ def _train_task(
 
     # init
     total_cost = 0
-    all_grads = list()
+    all_grads = []
 
     # inner and outer
     unique_inner = inner_v is not None
     unique_outer = outer_v is not None
 
     # iterate through inner loop training steps
-    for i in range(inner_grad_steps):
-
+    for _ in range(inner_grad_steps):
         # compute inner gradient for update the inner variables
         cost, inner_update_grads = ivy.execute_with_gradients(
             lambda v: inner_cost_fn(
@@ -107,8 +106,8 @@ def _train_task(
 
         # update cost and update parameters
         total_cost = total_cost + cost
-        if unique_inner:
-            variables = variables.set_at_key_chains(
+        variables = (
+            variables.set_at_key_chains(
                 inner_optimization_step(
                     variables.at_key_chains(inner_v)
                     if keep_innver_v
@@ -119,14 +118,15 @@ def _train_task(
                     stop_gradients=stop_gradients,
                 )
             )
-        else:
-            variables = inner_optimization_step(
+            if unique_inner
+            else inner_optimization_step(
                 variables,
                 inner_update_grads,
                 inner_learning_rate,
                 inplace=False,
                 stop_gradients=stop_gradients,
             )
+        )
 
     # once training is finished, compute the final cost, and update
     # all_grads if fist order method
@@ -214,12 +214,12 @@ def _train_tasks_batched(
         if return_inner_v in ["all", True]:
             return cost, grads, updated_ivs
         elif return_inner_v == "first":
-            return cost, grads, updated_ivs[0:1]
+            return cost, grads, updated_ivs[:1]
         return cost, grads
     if return_inner_v in ["all", True]:
         return cost, updated_ivs
     elif return_inner_v == "first":
-        return cost, updated_ivs[0:1]
+        return cost, updated_ivs[:1]
     return cost
 
 
@@ -244,20 +244,16 @@ def _train_tasks_with_for_loop(
     stop_gradients,
 ):
     total_cost = 0
-    updated_ivs_to_return = list()
-    all_grads = list()
-    if isinstance(inner_v, (list, tuple)) and isinstance(
+    updated_ivs_to_return = []
+    all_grads = []
+    inner_v_seq = isinstance(inner_v, (list, tuple)) and isinstance(
         inner_v[0], (list, tuple, dict, type(None))
-    ):
-        inner_v_seq = True
-    else:
-        inner_v_seq = False
-    if isinstance(outer_v, (list, tuple)) and isinstance(
+    )
+
+    outer_v_seq = isinstance(outer_v, (list, tuple)) and isinstance(
         outer_v[0], (list, tuple, dict, type(None))
-    ):
-        outer_v_seq = True
-    else:
-        outer_v_seq = False
+    )
+
     for i, sub_batch in enumerate(batch.unstack(0, True, num_tasks)):
         if inner_sub_batch_fn is not None:
             inner_sub_batch = inner_sub_batch_fn(sub_batch)

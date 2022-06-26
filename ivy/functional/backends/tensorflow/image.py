@@ -32,7 +32,7 @@ def stack_images(
     stack_height = (num_images / stack_ratio) ** 0.5
     stack_height_int = math.ceil(stack_height)
     stack_width_int = math.ceil(num_images / stack_height)
-    image_rows = list()
+    image_rows = []
     for i in range(stack_width_int):
         images_to_concat = images[i * stack_height_int : (i + 1) * stack_height_int]
         images_to_concat += [ivy.zeros_like(images[0])] * (
@@ -51,7 +51,7 @@ def linear_resample(x, num_samples, axis=-1):
     x_coords = tf.range(num_samples, dtype=tf.float32) * (
         (num_vals - 1) / (num_samples - 1)
     )
-    x_coords = x_coords + xp[0:1]
+    x_coords = x_coords + xp[:1]
     return tfp.math.interp_regular_1d_grid(x_coords, 0, num_vals - 1, x, axis=axis)
 
 

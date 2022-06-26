@@ -51,9 +51,11 @@ def as_ivy_dev(device: torch.device):
 def as_native_dev(
     device: Optional[Union[ivy.Device, torch.device]] = None
 ) -> Optional[torch.device]:
-    if not isinstance(device, str):
-        return device
-    return torch.device(ivy.Device(device).replace("gpu", "cuda"))
+    return (
+        torch.device(ivy.Device(device).replace("gpu", "cuda"))
+        if isinstance(device, str)
+        else device
+    )
 
 
 def clear_mem_on_dev(device):
@@ -71,9 +73,7 @@ def gpu_is_available() -> bool:
 
 # noinspection PyUnresolvedReferences
 def tpu_is_available() -> bool:
-    if importlib.util.find_spec("torch_xla") is not None:
-        return True
-    return False
+    return importlib.util.find_spec("torch_xla") is not None
 
 
 class Profiler(BaseProfiler):

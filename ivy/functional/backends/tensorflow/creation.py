@@ -22,31 +22,28 @@ def arange(start, stop=None, step=1, *, dtype: tf.DType = None, device: str):
         stop = start
         start = 0
     if (step > 0 and start > stop) or (step < 0 and start < stop):
-        if isinstance(stop, float):
-            stop = float(start)
-        else:
-            stop = start
-
+        stop = float(start) if isinstance(stop, float) else start
     device = as_native_dev(default_device(device))
     with tf.device(device):
 
         if dtype is None:
-            if (
-                isinstance(start, int)
-                and isinstance(stop, int)
-                and isinstance(step, int)
-            ):
-                return tf.cast(
+            return (
+                tf.cast(
                     tf.range(start, stop, delta=step, dtype=tf.int64), tf.int32
                 )
-            else:
-                return tf.range(start, stop, delta=step)
+                if (
+                    isinstance(start, int)
+                    and isinstance(stop, int)
+                    and isinstance(step, int)
+                )
+                else tf.range(start, stop, delta=step)
+            )
+
+        dtype = as_native_dtype(default_dtype(dtype))
+        if dtype in [tf.int8, tf.uint8, tf.int16, tf.uint16, tf.uint32, tf.uint64]:
+            return tf.cast(tf.range(start, stop, delta=step, dtype=tf.int64), dtype)
         else:
-            dtype = as_native_dtype(default_dtype(dtype))
-            if dtype in [tf.int8, tf.uint8, tf.int16, tf.uint16, tf.uint32, tf.uint64]:
-                return tf.cast(tf.range(start, stop, delta=step, dtype=tf.int64), dtype)
-            else:
-                return tf.range(start, stop, delta=step, dtype=dtype)
+            return tf.range(start, stop, delta=step, dtype=dtype)
 
 
 def asarray(object_in, *, copy=None, dtype: tf.DType = None, device: str):
@@ -55,7 +52,7 @@ def asarray(object_in, *, copy=None, dtype: tf.DType = None, device: str):
         if copy:
             if dtype is None and isinstance(object_in, tf.Tensor):
                 return tf.identity(object_in)
-            if dtype is None and not isinstance(object_in, tf.Tensor):
+            if dtype is None:
                 try:
                     dtype = default_dtype(item=object_in, as_native=True)
                     tensor = tf.convert_to_tensor(object_in, dtype=dtype)
@@ -65,7 +62,6 @@ def asarray(object_in, *, copy=None, dtype: tf.DType = None, device: str):
                         ivy.nested_map(object_in, lambda x: tf.cast(x, dtype)),
                         dtype=dtype,
                     )
-                return tf.identity(tf.cast(tensor, dtype))
             else:
                 dtype = as_ivy_dtype(default_dtype(dtype, object_in))
                 try:
@@ -75,11 +71,11 @@ def asarray(object_in, *, copy=None, dtype: tf.DType = None, device: str):
                         ivy.nested_map(object_in, lambda x: tf.cast(x, dtype)),
                         dtype=dtype,
                     )
-                return tf.identity(tf.cast(tensor, dtype))
+            return tf.identity(tf.cast(tensor, dtype))
         else:
             if dtype is None and isinstance(object_in, tf.Tensor):
                 return object_in
-            if dtype is None and not isinstance(object_in, tf.Tensor):
+            if dtype is None:
                 try:
                     return tf.convert_to_tensor(object_in)
                 except (TypeError, ValueError):
@@ -192,10 +188,12 @@ def linspace(
     with tf.device(ivy.as_native_dev(device)):
         start = tf.constant(start, dtype=dtype)
         stop = tf.constant(stop, dtype=dtype)
-        if not endpoint:
-            ans = tf.linspace(start, stop, num + 1, axis=axis)[:-1]
-        else:
-            ans = tf.linspace(start, stop, num, axis=axis)
+        ans = (
+            tf.linspace(start, stop, num, axis=axis)
+            if endpoint
+            else tf.linspace(start, stop, num + 1, axis=axis)[:-1]
+        )
+
         if dtype is None:
             dtype = tf.float32
         ans = tf.cast(ans, dtype)

@@ -46,7 +46,7 @@ class NativeDtype:
 
 class Device(str):
     def __new__(cls, dev_str):
-        assert dev_str[0:3] in ["gpu", "tpu", "cpu"]
+        assert dev_str[:3] in ["gpu", "tpu", "cpu"]
         if dev_str != "cpu":
             assert dev_str[3] == ":"
             assert dev_str[4:].isnumeric()
@@ -76,9 +76,9 @@ class Node(str):
     pass
 
 
-array_significant_figures_stack = list()
-array_decimal_values_stack = list()
-warning_level_stack = list()
+array_significant_figures_stack = []
+array_decimal_values_stack = []
+warning_level_stack = []
 warn_to_regex = {"all": "!.*", "ivy_only": "^(?!.*ivy).*$", "none": ".*"}
 
 
@@ -433,11 +433,11 @@ def array_significant_figures(sig_figs=None):
         _assert_array_significant_figures_formatting(sig_figs)
         return sig_figs
     global array_significant_figures_stack
-    if not array_significant_figures_stack:
-        ret = 3
-    else:
-        ret = array_significant_figures_stack[-1]
-    return ret
+    return (
+        array_significant_figures_stack[-1]
+        if array_significant_figures_stack
+        else 3
+    )
 
 
 def set_array_significant_figures(sig_figs):
@@ -486,11 +486,7 @@ def array_decimal_values(dec_vals=None):
         _assert_array_decimal_values_formatting(dec_vals)
         return dec_vals
     global array_decimal_values_stack
-    if not array_decimal_values_stack:
-        ret = None
-    else:
-        ret = array_decimal_values_stack[-1]
-    return ret
+    return array_decimal_values_stack[-1] if array_decimal_values_stack else None
 
 
 def set_array_decimal_values(dec_vals):
@@ -523,11 +519,7 @@ def warning_level():
         current warning level, default is "ivy_only"
     """
     global warning_level_stack
-    if not warning_level_stack:
-        ret = "ivy_only"
-    else:
-        ret = warning_level_stack[-1]
-    return ret
+    return warning_level_stack[-1] if warning_level_stack else "ivy_only"
 
 
 def set_warning_level(warn_level):

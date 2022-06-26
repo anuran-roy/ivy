@@ -75,9 +75,9 @@ class Module(abc.ABC):
         valid_build_modes = ["on_init", "explicit", "on_call"]
         if build_mode not in valid_build_modes:
             raise Exception(
-                "build_mode must be one of {} of type str, but found "
-                "{} of type {}".format(valid_build_modes, build_mode, type(build_mode))
+                f"build_mode must be one of {valid_build_modes} of type str, but found {build_mode} of type {type(build_mode)}"
             )
+
         self._dev = ivy.default(
             device, ivy.default(lambda: devices[0], ivy.default_device(), True)
         )
@@ -105,7 +105,7 @@ class Module(abc.ABC):
             alphabetical_keys=False, ivyh=ivy.get_backend("numpy")
         )
         self.expected_submod_rets = None
-        self.submod_dict = dict()
+        self.submod_dict = {}
         self.submod_call_order = ivy.Container(
             alphabetical_keys=False, ivyh=ivy.get_backend("numpy")
         )
@@ -156,9 +156,8 @@ class Module(abc.ABC):
             return False
         top_mod = self.top_mod()
         submods = top_mod._submods_to_track
-        if ivy.exists(submods):
-            if self not in submods:
-                return False
+        if ivy.exists(submods) and self not in submods:
+            return False
         depth = top_mod._submod_depth
         if ivy.exists(depth):
             return (
@@ -181,9 +180,8 @@ class Module(abc.ABC):
             return False
         top_mod = self.top_mod()
         submods = top_mod._submods_to_track
-        if ivy.exists(submods):
-            if self not in submods:
-                return False
+        if ivy.exists(submods) and self not in submods:
+            return False
         depth = top_mod._submod_depth
         if ivy.exists(depth):
             return (
@@ -220,22 +218,19 @@ class Module(abc.ABC):
             return obj.v
         elif isinstance(obj, (list, tuple)):
             for i, v in enumerate(obj):
-                ret = self._find_variables(v)
-                if ret:
-                    vs["v" + str(i)] = ret
+                if ret := self._find_variables(v):
+                    vs[f"v{str(i)}"] = ret
             return vs
         elif isinstance(obj, dict):
             for k, v in obj.items():
-                ret = self._find_variables(v)
-                if ret:
+                if ret := self._find_variables(v):
                     vs[k[1:] if k[0] == "_" else k] = ret
             return vs
         elif not hasattr(obj, "__dict__"):
             return vs
         for k, v in obj.__dict__.items():
-            if v is not None and k[0:2] != "__":
-                ret = self._find_variables(v)
-                if ret:
+            if v is not None and k[:2] != "__":
+                if ret := self._find_variables(v):
                     vs[k[1:] if k[0] == "_" else k] = ret
         return vs
 
@@ -263,19 +258,19 @@ class Module(abc.ABC):
             return
         elif isinstance(obj, (list, tuple)):
             for i, val in enumerate(obj):
-                self._wrap_call_methods(keychain_mappings, key + "/v" + str(i), val)
+                self._wrap_call_methods(keychain_mappings, f"{key}/v{str(i)}", val)
             return
         elif isinstance(obj, dict):
             for k, val in obj.items():
-                k = (key + "/" + k) if key != "" else k
+                k = f"{key}/{k}" if key != "" else k
                 self._wrap_call_methods(keychain_mappings, k, val)
             return
         if not hasattr(obj, "__dict__"):
             return
         for k, val in obj.__dict__.items():
-            if k[0:2] == "__":
+            if k[:2] == "__":
                 continue
-            k = (key + "/" + k) if key != "" else k
+            k = f"{key}/{k}" if key != "" else k
             if val is not None:
                 self._wrap_call_methods(keychain_mappings, k, val)
         return
@@ -394,9 +389,7 @@ class Module(abc.ABC):
         if self._sub_mods:
             if ivy.exists(depth):
                 if depth == 0:
-                    if show_v:
-                        return self.v
-                    return ""
+                    return self.v if show_v else ""
                 next_depth = depth - 1
             else:
                 next_depth = None
@@ -420,15 +413,12 @@ class Module(abc.ABC):
             self.top_v(depth).show_sub_container(self.v)
         else:
             print(
-                "both self.top_v and self.v must be initialized in order to show v in "
-                "top_v, "
-                "but found\n\ntop_v: {}\n\nv: {}.".format(self.top_v, self.v)
+                f"both self.top_v and self.v must be initialized in order to show v in top_v, but found\n\ntop_v: {self.top_v}\n\nv: {self.v}."
             )
 
     def v_with_top_v_key_chains(self, depth=None, flatten_key_chains=False):
         if ivy.exists(self.top_v) and ivy.exists(self.v):
-            kc = self.top_v(depth).find_sub_container(self.v)
-            if kc:
+            if kc := self.top_v(depth).find_sub_container(self.v):
                 ret = self.v.restructure_key_chains({"": kc}, keep_orig=False)
             else:
                 ret = self.v
@@ -437,9 +427,7 @@ class Module(abc.ABC):
             return ret
         else:
             print(
-                "both self.top_v and self.v must be initialized in order to show v in "
-                "top_v, "
-                "but found\n\ntop_v: {}\n\nv: {}.".format(self.top_v, self.v)
+                f"both self.top_v and self.v must be initialized in order to show v in top_v, but found\n\ntop_v: {self.top_v}\n\nv: {self.v}."
             )
 
     def mod_with_top_mod_key_chain(self, depth=None, flatten_key_chain=False):
@@ -449,9 +437,7 @@ class Module(abc.ABC):
         depth = 1
         top_mod = self
         mods = [ivy.Container.flatten_key_chain(top_mod.__repr__(), "_")]
-        while True:
-            if not ivy.exists(top_mod.top_mod):
-                break
+        while ivy.exists(top_mod.top_mod):
             top_mod = top_mod.top_mod(1)
             mods.append(ivy.Container.flatten_key_chain(top_mod.__repr__(), "_"))
             if depth == max_depth:
@@ -459,7 +445,7 @@ class Module(abc.ABC):
             depth += 1
         if flatten_key_chain:
             return "__".join(reversed(mods))
-        return [mod for mod in reversed(mods)]
+        return list(reversed(mods))
 
     def show_mod_in_top_mod(
         self, upper_depth=None, lower_depth=None, flatten_key_chains=False
@@ -476,8 +462,7 @@ class Module(abc.ABC):
             upper_sub_mods.show_sub_container(lower_sub_mods)
         else:
             print(
-                "self.top_mod must be initialized in order to show mod in top_mod,"
-                "but found\n\ntop_mod: {}".format(self.top_mod)
+                f"self.top_mod must be initialized in order to show mod in top_mod,but found\n\ntop_mod: {self.top_mod}"
             )
 
     def _set_submod_flags(
@@ -512,7 +497,7 @@ class Module(abc.ABC):
         full_key = self.__repr__().split(".")[-1]
         name_key = full_key.split(" ")[0]
         if name_key not in submod_dict:
-            submod_dict[name_key] = dict()
+            submod_dict[name_key] = {}
         id_str = full_key.split(" ")[-1][:-1]
         if id_str not in submod_dict[name_key]:
             submod_dict[name_key][id_str] = str(len(submod_dict[name_key]))
@@ -563,9 +548,7 @@ class Module(abc.ABC):
                 kwargs["rtol"] = rtol
             assert np.allclose(
                 ret, expected_ret, **kwargs
-            ), "ret\n\n{}\n\nand expected_ret\n\n{}\n\nwere not close enough".format(
-                ret, expected_ret
-            )
+            ), f"ret\n\n{ret}\n\nand expected_ret\n\n{expected_ret}\n\nwere not close enough"
 
     # noinspection PyProtectedMember
     def _is_submod_leaf(self):
@@ -581,8 +564,7 @@ class Module(abc.ABC):
         sco = self.top_mod().submod_call_order
         key_chain = self.mod_with_top_mod_key_chain()
         for key in key_chain[:-1]:
-            kcs = sco.key_chains_containing(key, include_empty=True)
-            if kcs:
+            if kcs := sco.key_chains_containing(key, include_empty=True):
                 max_key = sorted(
                     kcs,
                     key=lambda kc: int(
@@ -592,14 +574,13 @@ class Module(abc.ABC):
                     ),
                 )[-1].split("/")[0]
             else:
-                max_key = key + "_0"
+                max_key = f"{key}_0"
                 sco[max_key] = ivy.Container(
                     alphabetical_keys=False, ivyh=ivy.get_backend("numpy")
                 )
             sco = sco[max_key]
         final_key = key_chain[-1]
-        kcs = sco.key_chains_containing(final_key, include_empty=True)
-        if kcs:
+        if kcs := sco.key_chains_containing(final_key, include_empty=True):
             sorted_kcs = sorted(
                 kcs,
                 key=lambda kc: int(
@@ -614,9 +595,9 @@ class Module(abc.ABC):
                     -2 if isinstance(sco[chosen_kc], np.ndarray) else -1
                 ].split("_")[-1]
             )
-            new_key = final_key + "_{}".format(max_key_idx + 1)
+            new_key = final_key + f"_{max_key_idx + 1}"
         else:
-            new_key = final_key + "_0"
+            new_key = f"{final_key}_0"
         if self._is_submod_leaf():
             sco[new_key] = self.v_with_top_v_key_chains(
                 flatten_key_chains=True

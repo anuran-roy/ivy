@@ -36,8 +36,8 @@ for fpath in fpaths:
         # update tests to run and skip
         contents = [line.replace("__", "") for line in contents.split("\n")]
         for framework in framework_tests_to_run:
-            tests_to_run = list()
-            tests_to_skip = list()
+            tests_to_run = []
+            tests_to_skip = []
             for s in contents:
                 if s == "":
                     continue

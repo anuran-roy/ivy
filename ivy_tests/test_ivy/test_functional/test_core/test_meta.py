@@ -830,29 +830,28 @@ def test_maml_step_shared_vars(
     def update_grad_fn(w_init, sub_batch_in, num_steps, average=False):
         terms = [0] * num_steps + [1]
         collection_of_terms = [terms]
-        for s in range(num_steps):
+        for _ in range(num_steps):
             rhs = [t * 2 * sub_batch_in["x"][0] for t in terms]
             rhs.pop(0)
             rhs.append(0)
             terms = [t + rh for t, rh in zip(terms, rhs)]
-            collection_of_terms.append([t for t in terms])
+            collection_of_terms.append(list(terms))
         if average:
             return [
-                sum(
-                    [
+                (
+                    sum(
                         t * inner_learning_rate ** (num_steps - i)
                         for i, t in enumerate(tms)
-                    ]
+                    )
+                    * w_init.latent
                 )
-                * w_init.latent
                 for tms in collection_of_terms
             ]
+
         return (
             sum(
-                [
-                    t * inner_learning_rate ** (num_steps - i)
-                    for i, t in enumerate(terms)
-                ]
+                t * inner_learning_rate ** (num_steps - i)
+                for i, t in enumerate(terms)
             )
             * w_init.latent
         )

@@ -25,8 +25,7 @@ def concat(
 
 
 def expand_dims(x: torch.Tensor, axis: int = 0) -> torch.Tensor:
-    ret = torch.unsqueeze(x, axis)
-    return ret
+    return torch.unsqueeze(x, axis)
 
 
 def flip(
@@ -37,29 +36,20 @@ def flip(
     num_dims: int = len(x.shape)
     if not num_dims:
         return x
-    if axis is None:
-        new_axis: List[int] = list(range(num_dims))
-    else:
-        new_axis: List[int] = axis
-    if isinstance(new_axis, int):
-        new_axis = [new_axis]
-    else:
-        new_axis = new_axis
+    new_axis: List[int] = list(range(num_dims)) if axis is None else axis
+    new_axis = [new_axis] if isinstance(new_axis, int) else new_axis
     new_axis = [item + num_dims if item < 0 else item for item in new_axis]
-    ret = torch.flip(x, new_axis)
-    return ret
+    return torch.flip(x, new_axis)
 
 
 def permute_dims(x: torch.Tensor, axes: Tuple[int, ...]) -> torch.Tensor:
-    ret = torch.permute(x, axes)
-    return ret
+    return torch.permute(x, axes)
 
 
 def reshape(
     x: torch.Tensor, shape: Tuple[int, ...], copy: Optional[bool] = None
 ) -> torch.Tensor:
-    ret = torch.reshape(x, shape)
-    return ret
+    return torch.reshape(x, shape)
 
 
 def roll(
@@ -80,12 +70,10 @@ def squeeze(
     if isinstance(axis, int):
         if x.shape[axis] > 1:
             raise ValueError(
-                "Expected dimension of size 1, but found dimension size {}".format(
-                    x.shape[axis]
-                )
+                f"Expected dimension of size 1, but found dimension size {x.shape[axis]}"
             )
-        ret = torch.squeeze(x, axis)
-        return ret
+
+        return torch.squeeze(x, axis)
     elif isinstance(axis, tuple):
         axis = list(axis)
     normalise_axis = [
@@ -96,10 +84,9 @@ def squeeze(
     for i in axis_updated_after_squeeze:
         if x.shape[i] > 1:
             raise ValueError(
-                "Expected dimension of size 1, but found dimension size {}".format(
-                    x.shape[i]
-                )
+                f"Expected dimension of size 1, but found dimension size {x.shape[i]}"
             )
+
         else:
             x = torch.squeeze(x, i)
     return x
@@ -111,8 +98,7 @@ def stack(
     *,
     out: Optional[torch.Tensor] = None
 ) -> torch.Tensor:
-    ret = torch.stack(x, axis, out=out)
-    return ret
+    return torch.stack(x, axis, out=out)
 
 
 # Extra #
@@ -128,10 +114,9 @@ def split(
     if x.shape == ():
         if num_or_size_splits is not None and num_or_size_splits != 1:
             raise Exception(
-                "input array had no shape, but num_sections specified was {}".format(
-                    num_or_size_splits
-                )
+                f"input array had no shape, but num_sections specified was {num_or_size_splits}"
             )
+
         return [x]
     dim_size: int = x.shape[axis]
     if num_or_size_splits is None:
@@ -163,17 +148,15 @@ def split(
 def repeat(
     x: torch.Tensor, repeats: Union[int, List[int]], axis: int = None
 ) -> torch.Tensor:
-    if len(x.shape) == 0 and axis in [0, -1]:
+    if len(x.shape) == 0 and axis in {0, -1}:
         axis = None
-    ret = torch.repeat_interleave(x, repeats, axis)
-    return ret
+    return torch.repeat_interleave(x, repeats, axis)
 
 
 def tile(x: torch.Tensor, reps) -> torch.Tensor:
     if isinstance(reps, torch.Tensor):
         reps = reps.detach().cpu().numpy().tolist()
-    ret = x.repeat(reps)
-    return ret
+    return x.repeat(reps)
 
 
 # noinspection PyUnresolvedReferences
@@ -185,12 +168,10 @@ def constant_pad(
     if isinstance(pad_width, torch.Tensor):
         pad_width = pad_width.detach().cpu().numpy().tolist()
     pad_width.reverse()
-    pad_width_flat: List[int] = list()
+    pad_width_flat: List[int] = []
     for pad_width_sec in pad_width:
-        for item in pad_width_sec:
-            pad_width_flat.append(item)
-    ret = torch.nn.functional.pad(x, pad_width_flat, mode="constant", value=value)
-    return ret
+        pad_width_flat.extend(iter(pad_width_sec))
+    return torch.nn.functional.pad(x, pad_width_flat, mode="constant", value=value)
 
 
 def zero_pad(x: torch.Tensor, pad_width: List[List[int]]):
@@ -198,8 +179,7 @@ def zero_pad(x: torch.Tensor, pad_width: List[List[int]]):
 
 
 def swapaxes(x: torch.Tensor, axis0: int, axis1: int) -> torch.Tensor:
-    ret = torch.transpose(x, axis0, axis1)
-    return ret
+    return torch.transpose(x, axis0, axis1)
 
 
 def clip(
@@ -215,5 +195,4 @@ def clip(
         x_min = x_min.to(promoted_type)
         x_max = x_max.to(promoted_type)
         x = x.to(promoted_type)
-    ret = torch.clamp(x, x_min, x_max, out=out)
-    return ret
+    return torch.clamp(x, x_min, x_max, out=out)

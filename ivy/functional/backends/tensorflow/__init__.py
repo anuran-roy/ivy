@@ -81,9 +81,7 @@ invalid_float_dtypes = ()
 
 
 def closest_valid_dtype(type):
-    if type is None:
-        return ivy.default_dtype()
-    return type
+    return ivy.default_dtype() if type is None else type
 
 
 backend = "tensorflow"

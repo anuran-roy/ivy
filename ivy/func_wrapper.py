@@ -40,18 +40,18 @@ def _get_first_array(*args, **kwargs):
     # ToDo: make this more efficient, with function ivy.nested_nth_index_where
     arr = None
     if args:
-        arr_idxs = ivy.nested_indices_where(args, ivy.is_array, stop_after_n_found=1)
-        if arr_idxs:
+        if arr_idxs := ivy.nested_indices_where(
+            args, ivy.is_array, stop_after_n_found=1
+        ):
             arr = ivy.index_nest(args, arr_idxs[0])
-        else:
-            arr_idxs = ivy.nested_indices_where(
-                kwargs, ivy.is_array, stop_after_n_found=1
-            )
-            if arr_idxs:
-                arr = ivy.index_nest(kwargs, arr_idxs[0])
+        elif arr_idxs := ivy.nested_indices_where(
+            kwargs, ivy.is_array, stop_after_n_found=1
+        ):
+            arr = ivy.index_nest(kwargs, arr_idxs[0])
     elif kwargs:
-        arr_idxs = ivy.nested_indices_where(kwargs, ivy.is_array, stop_after_n_found=1)
-        if arr_idxs:
+        if arr_idxs := ivy.nested_indices_where(
+            kwargs, ivy.is_array, stop_after_n_found=1
+        ):
             arr = ivy.index_nest(kwargs, arr_idxs[0])
     return arr
 
@@ -306,7 +306,7 @@ def handle_nestable(fn: Callable) -> Callable:
         # if any of the arguments or keyword arguments passed to the function contains
         # a container, get the container's version of the function and call it using
         # the passed arguments.
-        cont_fn = getattr(ivy.Container, "static_" + fn_name)
+        cont_fn = getattr(ivy.Container, f"static_{fn_name}")
         if ivy.nested_any(
             args, ivy.is_ivy_container, check_nests=True
         ) or ivy.nested_any(kwargs, ivy.is_ivy_container, check_nests=True):

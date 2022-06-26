@@ -29,7 +29,7 @@ def random_uniform(
     RNG, rng_input = jax.random.split(RNG)
     return to_device(
         jax.random.uniform(
-            rng_input, shape if shape else (), minval=low, maxval=high, dtype=dtype
+            rng_input, shape or (), minval=low, maxval=high, dtype=dtype
         ),
         device=default_device(device),
     )
@@ -46,12 +46,11 @@ def random_normal(
     RNG, rng_input = jax.random.split(RNG)
     return (
         to_device(
-            jax.random.normal(rng_input, shape if shape else ()),
+            jax.random.normal(rng_input, shape or ()),
             device=default_device(device),
         )
         * std
-        + mean
-    )
+    ) + mean
 
 
 def multinomial(

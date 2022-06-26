@@ -46,9 +46,8 @@ def astype(x: torch.Tensor, dtype: torch.dtype, *, copy: bool = True) -> torch.T
     else:
         if x.dtype == dtype:
             return x
-        else:
-            new_tensor = x.clone().detach()
-            return new_tensor.to(dtype)
+        new_tensor = x.clone().detach()
+        return new_tensor.to(dtype)
     return x.to(dtype)
 
 
@@ -73,13 +72,17 @@ def can_cast(from_: Union[torch.dtype, torch.Tensor], to: torch.dtype) -> bool:
         return False
     if "int" in from_str and (("float" in to_str) or ("bool" in to_str)):
         return False
-    if "float" in from_str and "bool" in to_str:
-        return False
-    if "float" in from_str and "int" in to_str:
-        return False
-    if "uint" in from_str and ("int" in to_str and "u" not in to_str):
-        if ivy.dtype_bits(to) <= ivy.dtype_bits(from_):
+    if "float" in from_str:
+        if "bool" in to_str:
             return False
+        if "int" in to_str:
+            return False
+    if (
+        "uint" in from_str
+        and ("int" in to_str and "u" not in to_str)
+        and ivy.dtype_bits(to) <= ivy.dtype_bits(from_)
+    ):
+        return False
     return True
 
 
@@ -124,9 +127,7 @@ def dtype_bits(dtype_in):
 
 
 def dtype(x, as_native=False):
-    if as_native:
-        return ivy.to_native(x).dtype
-    return as_ivy_dtype(x.dtype)
+    return ivy.to_native(x).dtype if as_native else as_ivy_dtype(x.dtype)
 
 
 def as_ivy_dtype(dtype_in):
@@ -149,17 +150,19 @@ def as_ivy_dtype(dtype_in):
 
 
 def as_native_dtype(dtype_in: str) -> torch.dtype:
-    if not isinstance(dtype_in, str):
-        return dtype_in
-    return {
-        "int8": torch.int8,
-        "int16": torch.int16,
-        "int32": torch.int32,
-        "int64": torch.int64,
-        "uint8": torch.uint8,
-        "bfloat16": torch.bfloat16,
-        "float16": torch.float16,
-        "float32": torch.float32,
-        "float64": torch.float64,
-        "bool": torch.bool,
-    }[ivy.Dtype(dtype_in)]
+    return (
+        {
+            "int8": torch.int8,
+            "int16": torch.int16,
+            "int32": torch.int32,
+            "int64": torch.int64,
+            "uint8": torch.uint8,
+            "bfloat16": torch.bfloat16,
+            "float16": torch.float16,
+            "float32": torch.float32,
+            "float64": torch.float64,
+            "bool": torch.bool,
+        }[ivy.Dtype(dtype_in)]
+        if isinstance(dtype_in, str)
+        else dtype_in
+    )

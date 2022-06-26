@@ -28,7 +28,7 @@ def stack_images(
     stack_height = (num_images / stack_ratio) ** 0.5
     stack_height_int = math.ceil(stack_height)
     stack_width_int: int = math.ceil(num_images / stack_height)
-    image_rows = list()
+    image_rows = []
     for i in range(stack_width_int):
         images_to_concat = images[i * stack_height_int : (i + 1) * stack_height_int]
         images_to_concat += [torch.zeros_like(images[0])] * (
@@ -42,9 +42,9 @@ def linear_resample(x, num_samples: int, axis: int = -1):
     x_shape = list(x.shape)
     num_x_dims = len(x_shape)
     num_vals = x_shape[axis]
-    axis = axis % num_x_dims
+    axis %= num_x_dims
     if axis != num_x_dims - 1:
-        x_pre_shape = x_shape[0:axis] + x_shape[-1:] + x_shape[axis + 1 : -1]
+        x_pre_shape = x_shape[:axis] + x_shape[-1:] + x_shape[axis + 1 : -1]
         x = torch.swapaxes(x, axis, -1)
     else:
         x_pre_shape = x_shape[:-1]

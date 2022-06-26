@@ -121,10 +121,7 @@ def std(
             return ivy.inplace_update(out, _1_dim_array_to_flat_array(red_std))
         else:
             return _1_dim_array_to_flat_array(red_std)
-    if ivy.exists(out):
-        return ivy.inplace_update(out, red_std)
-    else:
-        return red_std
+    return ivy.inplace_update(out, red_std) if ivy.exists(out) else red_std
 
 
 def sum(
@@ -167,10 +164,7 @@ def var(
             return ivy.inplace_update(out, _1_dim_array_to_flat_array(ret))
         else:
             return _1_dim_array_to_flat_array(ret)
-    if ivy.exists(out):
-        return ivy.inplace_update(out, ret)
-    else:
-        return ret
+    return ivy.inplace_update(out, ret) if ivy.exists(out) else ret
 
 
 # Extra #

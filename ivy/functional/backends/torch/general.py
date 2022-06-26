@@ -17,9 +17,7 @@ torch_scatter = None
 
 def is_native_array(x, exclusive=False):
     if isinstance(x, torch.Tensor):
-        if exclusive and x.requires_grad:
-            return False
-        return True
+        return not exclusive or not x.requires_grad
     return False
 
 
@@ -35,7 +33,7 @@ def array_equal(x0: torch.Tensor, x1: torch.Tensor) -> bool:
 
 
 def to_numpy(x: torch.Tensor) -> np.ndarray:
-    if isinstance(x, np.ndarray) or isinstance(x, (float, int, bool)):
+    if isinstance(x, (np.ndarray, float, int, bool)):
         return x
     elif torch.is_tensor(x):
         if x.dtype is torch.bfloat16:
@@ -45,9 +43,7 @@ def to_numpy(x: torch.Tensor) -> np.ndarray:
 
 
 def to_scalar(x: torch.Tensor) -> Number:
-    if isinstance(x, (float, int)):
-        return x
-    return x.item()
+    return x if isinstance(x, (float, int)) else x.item()
 
 
 def to_list(x: torch.Tensor) -> list:
@@ -59,8 +55,7 @@ def to_list(x: torch.Tensor) -> list:
 
 
 def floormod(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    ret = x % y
-    return ret
+    return x % y
 
 
 def unstack(x, axis: int, keepdims: bool = False) -> List[torch.Tensor]:
@@ -146,7 +141,7 @@ def scatter_flat(
     if device is None:
         device = dev(updates)
     dtype = updates.dtype
-    if reduction in ["sum", "replace"]:
+    if reduction in {"sum", "replace"}:
         initial_val = torch.tensor(0).type(dtype).to(as_native_dev(device))
     elif reduction == "min":
         initial_val = torch.tensor(1e12).type(dtype).to(as_native_dev(device))
@@ -154,10 +149,9 @@ def scatter_flat(
         initial_val = torch.tensor(-1e12).type(dtype).to(as_native_dev(device))
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     if target_given:
         output = tensor
     else:
@@ -187,12 +181,12 @@ def scatter_flat(
 
 
 def _parse_ellipsis(so, ndims):
-    pre = list()
+    pre = []
     for s in so:
         if s is Ellipsis:
             break
         pre.append(s)
-    post = list()
+    post = []
     for s in reversed(so):
         if s is Ellipsis:
             break
@@ -278,10 +272,9 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", *, de
         initial_val = torch.tensor(-1e12).type(dtype).to(as_native_dev(device))
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     if target_given:
         flat_output = torch.reshape(tensor, (flat_result_size,))
     else:
@@ -291,7 +284,7 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", *, de
         )
     flat_updates = torch.reshape(updates, (-1,))
     new_shape = [1] * (len(indices_shape) - 1) + [num_index_dims]
-    indices_scales = torch.reshape(result_dim_sizes[0:num_index_dims], new_shape)
+    indices_scales = torch.reshape(result_dim_sizes[:num_index_dims], new_shape)
     indices_for_flat_tiled = torch.reshape(
         torch.sum(indices * indices_scales, -1, keepdim=True), (-1, 1)
     ).repeat(*[1, implicit_indices_factor])
@@ -327,8 +320,7 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", *, de
             ),
             flat_scatter,
         )
-    res = torch.reshape(flat_scatter, list(shape))
-    return res
+    return torch.reshape(flat_scatter, list(shape))
 
 
 # noinspection PyShadowingNames

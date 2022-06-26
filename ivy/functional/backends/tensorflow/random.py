@@ -25,7 +25,7 @@ def random_uniform(
     low = tf.cast(low, dtype)
     high = tf.cast(high, dtype)
     with tf.device(default_device(device)):
-        return tf.random.uniform(shape if shape else (), low, high, dtype=dtype)
+        return tf.random.uniform(shape or (), low, high, dtype=dtype)
 
 
 def random_normal(
@@ -38,7 +38,7 @@ def random_normal(
     mean = tf.cast(mean, "float32")
     std = tf.cast(std, "float32")
     with tf.device(default_device(device)):
-        return tf.random.normal(shape if shape else (), mean, std)
+        return tf.random.normal(shape or (), mean, std)
 
 
 def multinomial(
@@ -53,7 +53,7 @@ def multinomial(
     if not replace:
         raise Exception("TensorFlow does not support multinomial without replacement")
     device = default_device(device)
-    with tf.device("/" + device.upper()):
+    with tf.device(f"/{device.upper()}"):
         if probs is None:
             probs = (
                 tf.ones(
@@ -73,7 +73,7 @@ def randint(
     device = default_device(device)
     low = tf.cast(low, "int64")
     high = tf.cast(high, "int64")
-    with tf.device("/" + device.upper()):
+    with tf.device(f"/{device.upper()}"):
         return tf.random.uniform(shape=shape, minval=low, maxval=high, dtype=tf.int64)
 
 

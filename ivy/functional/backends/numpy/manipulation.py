@@ -14,8 +14,8 @@ def _flat_array_to_1_dim_array(x):
 
 
 def concat(xs: List[np.ndarray], axis: int = 0) -> np.ndarray:
-    is_tuple = type(xs) is tuple
     if axis is None:
+        is_tuple = type(xs) is tuple
         if is_tuple:
             xs = list(xs)
         for i in range(len(xs)):
@@ -32,8 +32,7 @@ def concat(xs: List[np.ndarray], axis: int = 0) -> np.ndarray:
 
 
 def expand_dims(x: np.ndarray, axis: int = 0) -> np.ndarray:
-    ret = np.expand_dims(x, axis)
-    return ret
+    return np.expand_dims(x, axis)
 
 
 def flip(
@@ -49,20 +48,17 @@ def flip(
     if type(axis) is int:
         axis = [axis]
     axis = [item + num_dims if item < 0 else item for item in axis]
-    ret = np.flip(x, axis)
-    return ret
+    return np.flip(x, axis)
 
 
 def permute_dims(x: np.ndarray, axes: Tuple[int, ...]) -> np.ndarray:
-    ret = np.transpose(x, axes)
-    return ret
+    return np.transpose(x, axes)
 
 
 def reshape(
     x: np.ndarray, shape: Tuple[int, ...], copy: Optional[bool] = None
 ) -> np.ndarray:
-    ret = np.reshape(x, shape)
-    return ret
+    return np.reshape(x, shape)
 
 
 def roll(
@@ -82,11 +78,8 @@ def squeeze(
     if x.shape == ():
         if axis is None or axis == 0 or axis == -1:
             return x
-        raise ValueError(
-            "tried to squeeze a zero-dimensional input by axis {}".format(axis)
-        )
-    ret = np.squeeze(x, axis)
-    return ret
+        raise ValueError(f"tried to squeeze a zero-dimensional input by axis {axis}")
+    return np.squeeze(x, axis)
 
 
 def stack(
@@ -106,10 +99,9 @@ def split(x, num_or_size_splits=None, axis=0, with_remainder=False):
     if x.shape == ():
         if num_or_size_splits is not None and num_or_size_splits != 1:
             raise Exception(
-                "input array had no shape, but num_sections specified was {}".format(
-                    num_or_size_splits
-                )
+                f"input array had no shape, but num_sections specified was {num_or_size_splits}"
             )
+
         return [x]
     if num_or_size_splits is None:
         num_or_size_splits = x.shape[axis]
@@ -129,38 +121,32 @@ def split(x, num_or_size_splits=None, axis=0, with_remainder=False):
 def repeat(
     x: np.ndarray, repeats: Union[int, List[int]], axis: int = None
 ) -> np.ndarray:
-    ret = np.repeat(x, repeats, axis)
-    return ret
+    return np.repeat(x, repeats, axis)
 
 
 def tile(x: np.ndarray, reps, out: Optional[np.ndarray] = None) -> np.ndarray:
-    ret = np.tile(x, reps)
-    return ret
+    return np.tile(x, reps)
 
 
 def constant_pad(
     x: np.ndarray, pad_width: List[List[int]], value: Number = 0.0
 ) -> np.ndarray:
-    ret = np.pad(_flat_array_to_1_dim_array(x), pad_width, constant_values=value)
-    return ret
+    return np.pad(_flat_array_to_1_dim_array(x), pad_width, constant_values=value)
 
 
 def zero_pad(
     x: np.ndarray, pad_width: List[List[int]], out: Optional[np.ndarray] = None
 ):
-    ret = np.pad(_flat_array_to_1_dim_array(x), pad_width)
-    return ret
+    return np.pad(_flat_array_to_1_dim_array(x), pad_width)
 
 
 def swapaxes(
     x: np.ndarray, axis0: int, axis1: int, out: Optional[np.ndarray] = None
 ) -> np.ndarray:
-    ret = np.swapaxes(x, axis0, axis1)
-    return ret
+    return np.swapaxes(x, axis0, axis1)
 
 
 def clip(
     x: np.ndarray, x_min: Union[Number, np.ndarray], x_max: Union[Number, np.ndarray]
 ) -> np.ndarray:
-    ret = np.asarray(np.clip(x, x_min, x_max))
-    return ret
+    return np.asarray(np.clip(x, x_min, x_max))

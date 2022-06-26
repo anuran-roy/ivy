@@ -73,9 +73,9 @@ class IvyModule(ivy.Module):
                     native.__setattr__(k, v.data)
             else:
                 raise Exception(
-                    "found item in variable container {} which was neither a "
-                    "sub ivy.Container nor a variable.".format(v)
+                    f"found item in variable container {v} which was neither a sub ivy.Container nor a variable."
                 )
+
         return native
 
     def _forward(self, *a, **kw):
@@ -100,11 +100,10 @@ def to_ivy_module(
     args = ivy.default(args, [])
     kwargs = ivy.default(kwargs, {})
 
-    if not ivy.exists(native_module):
-        if not ivy.exists(native_module_class):
-            raise Exception(
-                "native_module_class must be specified if native_module is not given"
-            )
+    if not ivy.exists(native_module) and not ivy.exists(native_module_class):
+        raise Exception(
+            "native_module_class must be specified if native_module is not given"
+        )
 
     return IvyModule(
         native_module_class,
