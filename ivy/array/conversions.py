@@ -67,9 +67,7 @@ def to_ivy(
         instances.
 
     """
-    if nested:
-        return ivy.nested_map(x, _to_ivy, include_derived)
-    return _to_ivy(x)
+    return ivy.nested_map(x, _to_ivy, include_derived) if nested else _to_ivy(x)
 
 
 def args_to_ivy(

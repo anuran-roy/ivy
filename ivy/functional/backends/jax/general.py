@@ -57,10 +57,7 @@ def to_numpy(x: JaxArray) -> np.ndarray:
 
 
 def to_scalar(x: JaxArray) -> Number:
-    if isinstance(x, Number):
-        return x
-    else:
-        return _to_array(x).item()
+    return x if isinstance(x, Number) else _to_array(x).item()
 
 
 def to_list(x: JaxArray) -> list:
@@ -68,10 +65,7 @@ def to_list(x: JaxArray) -> list:
 
 
 def shape(x: JaxArray, as_tensor: bool = False) -> Union[JaxArray, List[int]]:
-    if as_tensor:
-        return jnp.asarray(jnp.shape(x))
-    else:
-        return x.shape
+    return jnp.asarray(jnp.shape(x)) if as_tensor else x.shape
 
 
 def get_num_dims(x, as_tensor=False):
@@ -83,8 +77,7 @@ def container_types():
 
 
 def floormod(x: JaxArray, y: JaxArray) -> JaxArray:
-    ret = x % y
-    return ret
+    return x % y
 
 
 def unstack(x, axis, keepdims=False):
@@ -163,10 +156,9 @@ def scatter_flat(indices, updates, size=None, tensor=None, reduction="sum", *, d
             target = jnp.where(target == -1e12, 0.0, target)
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     return _to_device(target, device)
 
 
@@ -229,10 +221,9 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", *, de
             target = jnp.where(target == -1e12, 0.0, target)
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     return _to_device(target, device)
 
 
@@ -257,7 +248,7 @@ def gather_nd(params, indices, *, device: str):
     implicit_indices_factor = int(result_dim_sizes[num_index_dims - 1].item())
     flat_params = jnp.reshape(params, (-1,))
     new_shape = [1] * (len(indices_shape) - 1) + [num_index_dims]
-    indices_scales = jnp.reshape(result_dim_sizes[0:num_index_dims], new_shape)
+    indices_scales = jnp.reshape(result_dim_sizes[:num_index_dims], new_shape)
     indices_for_flat_tiled = jnp.tile(
         jnp.reshape(jnp.sum(indices * indices_scales, -1, keepdims=True), (-1, 1)),
         (1, implicit_indices_factor),
@@ -291,8 +282,7 @@ def one_hot(indices, depth, *, device):
 
 def indices_where(x):
     where_x = jnp.where(x)
-    ret = jnp.concatenate([jnp.expand_dims(item, -1) for item in where_x], -1)
-    return ret
+    return jnp.concatenate([jnp.expand_dims(item, -1) for item in where_x], -1)
 
 
 def inplace_decrement(x, val):

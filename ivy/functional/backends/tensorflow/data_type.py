@@ -83,30 +83,24 @@ def astype(
     else:
         if x.dtype == dtype:
             return x
-        else:
-            new_tensor = tf.experimental.numpy.copy(x)
-            new_tensor = tf.cast(new_tensor, dtype)
-            return new_tensor
+        new_tensor = tf.experimental.numpy.copy(x)
+        new_tensor = tf.cast(new_tensor, dtype)
+        return new_tensor
     return tf.cast(x, dtype)
 
 
 def broadcast_arrays(
     *arrays: Union[tf.Tensor, tf.Variable],
 ) -> List[Union[tf.Tensor, tf.Variable]]:
-    if len(arrays) > 1:
-        desired_shape = tf.broadcast_dynamic_shape(arrays[0].shape, arrays[1].shape)
-        if len(arrays) > 2:
-            for i in range(2, len(arrays)):
-                desired_shape = tf.broadcast_dynamic_shape(
-                    desired_shape, arrays[i].shape
-                )
-    else:
+    if len(arrays) <= 1:
         return [arrays[0]]
-    result = []
-    for tensor in arrays:
-        result.append(tf.broadcast_to(tensor, desired_shape))
-
-    return result
+    desired_shape = tf.broadcast_dynamic_shape(arrays[0].shape, arrays[1].shape)
+    if len(arrays) > 2:
+        for i in range(2, len(arrays)):
+            desired_shape = tf.broadcast_dynamic_shape(
+                desired_shape, arrays[i].shape
+            )
+    return [tf.broadcast_to(tensor, desired_shape) for tensor in arrays]
 
 
 def broadcast_to(
@@ -129,13 +123,17 @@ def can_cast(from_: Union[tf.DType, tf.Tensor, tf.Variable], to: tf.DType) -> bo
         return False
     if "int" in from_str and (("float" in to_str) or ("bool" in to_str)):
         return False
-    if "float" in from_str and "bool" in to_str:
-        return False
-    if "float" in from_str and "int" in to_str:
-        return False
-    if "uint" in from_str and ("int" in to_str and "u" not in to_str):
-        if ivy.dtype_bits(to) <= ivy.dtype_bits(from_):
+    if "float" in from_str:
+        if "bool" in to_str:
             return False
+        if "int" in to_str:
+            return False
+    if (
+        "uint" in from_str
+        and ("int" in to_str and "u" not in to_str)
+        and ivy.dtype_bits(to) <= ivy.dtype_bits(from_)
+    ):
+        return False
     return True
 
 
@@ -179,9 +177,7 @@ def dtype_bits(dtype_in):
 
 
 def dtype(x, as_native=False):
-    if as_native:
-        return ivy.to_native(x).dtype
-    return as_ivy_dtype(x.dtype)
+    return ivy.to_native(x).dtype if as_native else as_ivy_dtype(x.dtype)
 
 
 def as_ivy_dtype(dtype_in):
@@ -191,6 +187,8 @@ def as_ivy_dtype(dtype_in):
 
 
 def as_native_dtype(dtype_in):
-    if not isinstance(dtype_in, str):
-        return dtype_in
-    return native_dtype_dict[ivy.Dtype(dtype_in)]
+    return (
+        native_dtype_dict[ivy.Dtype(dtype_in)]
+        if isinstance(dtype_in, str)
+        else dtype_in
+    )

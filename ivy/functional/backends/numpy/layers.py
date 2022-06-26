@@ -40,7 +40,7 @@ def conv2d(
     data_format: str = "NHWC",
     dilations: int = 1,
 ) -> np.ndarray:
-    filter_shape = filters.shape[0:2]
+    filter_shape = filters.shape[:2]
     filter_shape = list(filter_shape)
     if data_format == "NCHW":
         x = np.transpose(x, (0, 2, 3, 1))
@@ -55,7 +55,7 @@ def conv2d(
     new_w = x_shape[2] - filter_shape[1] + 1
     new_shape = [x_shape[0], new_h, new_w] + filter_shape + [x_shape[-1]]
     # ToDo: add non-unit stride support
-    new_strides = x.strides[0:1] + x.strides[1:3] + x.strides[1:3] + x.strides[-1:]
+    new_strides = x.strides[:1] + x.strides[1:3] + x.strides[1:3] + x.strides[-1:]
     # B x OH x OW x KH x KW x I
     sub_matrices = np.lib.stride_tricks.as_strided(
         x, new_shape, new_strides, writeable=False

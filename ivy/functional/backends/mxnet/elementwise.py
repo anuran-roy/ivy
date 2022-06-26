@@ -28,14 +28,12 @@ def bitwise_and(
 
 @_handle_flat_arrays_in_out
 def ceil(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.ceil(x)
-    return ret
+    return mx.nd.ceil(x)
 
 
 @_handle_flat_arrays_in_out
 def floor(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.floor(x)
-    return ret
+    return mx.nd.floor(x)
 
 
 @_handle_flat_arrays_in_out
@@ -64,30 +62,21 @@ def greater_equal(
 
 @_handle_flat_arrays_in_out
 def isfinite(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    # ToDo: remove float32 conversion once int8 and uint8 work correctly.
-    #  Currently 0 returns 0 for these types.
-    ret = mx.nd.contrib.isfinite(x.astype("float32")).astype("bool")
-    return ret
+    return mx.nd.contrib.isfinite(x.astype("float32")).astype("bool")
 
 
 @_handle_flat_arrays_in_out
 def isinf(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.contrib.isinf(x.astype("float32")).astype("bool")
-    return ret
+    return mx.nd.contrib.isinf(x.astype("float32")).astype("bool")
 
 
 def sqrt(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.sqrt(x)
-    else:
-        ret = mx.nd.sqrt(x)
-    return ret
+    return math.sqrt(x) if isinstance(x, float) else mx.nd.sqrt(x)
 
 
 @_handle_flat_arrays_in_out
 def isnan(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.contrib.isnan(x).astype("bool")
-    return ret
+    return mx.nd.contrib.isnan(x).astype("bool")
 
 
 @_handle_flat_arrays_in_out
@@ -100,35 +89,27 @@ def less(
 
 @_handle_flat_arrays_in_out
 def logical_xor(x1: mx.nd.NDArray, x2: mx.nd.NDArray, dtype: ["bool"]) -> mx.nd.NDArray:
-    ret = mx.nd.logical_xor(x1, x2, dtype).astype("bool")
-    return ret
+    return mx.nd.logical_xor(x1, x2, dtype).astype("bool")
 
 
 @_handle_flat_arrays_in_out
 def logical_not(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.logical_not(x)
-    return ret
+    return mx.nd.logical_not(x)
 
 
 @_handle_flat_arrays_in_out
 def acos(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.acos(x)
-    else:
-        ret = mx.nd.arccos(x)
-    return ret
+    return math.acos(x) if isinstance(x, float) else mx.nd.arccos(x)
 
 
 @_handle_flat_arrays_in_out
 def logical_and(x1: mx.nd.NDArray, x2: mx.nd.NDArray, dtype: ["bool"]) -> mx.nd.NDArray:
-    ret = mx.nd.logical_and(x1, x2, dtype).astype("bool")
-    return ret
+    return mx.nd.logical_and(x1, x2, dtype).astype("bool")
 
 
 @_handle_flat_arrays_in_out
 def logical_or(x1: mx.nd.NDArray, x2: mx.nd.NDArray, dtype: ["bool"]) -> mx.nd.NDArray:
-    ret = mx.nd.logical_or(x1, x2, dtype).astype("bool")
-    return ret
+    return mx.nd.logical_or(x1, x2, dtype).astype("bool")
 
 
 @_handle_flat_arrays_in_out
@@ -141,20 +122,12 @@ def multiply(
 
 @_handle_flat_arrays_in_out
 def acosh(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.acosh(x)
-    else:
-        ret = mx.nd.arccosh(x)
-    return ret
+    return math.acosh(x) if isinstance(x, float) else mx.nd.arccosh(x)
 
 
 @_handle_flat_arrays_in_out
 def sin(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.sin(x)
-    else:
-        ret = mx.nd.sin(x)
-    return ret
+    return math.sin(x) if isinstance(x, float) else mx.nd.sin(x)
 
 
 @_handle_flat_arrays_in_out
@@ -164,11 +137,7 @@ def negative(x: Union[float, mx.nd.NDArray]) -> mx.nd.NDArray:
 
 @_handle_flat_arrays_in_out
 def tanh(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.tanh(x)
-    else:
-        ret = mx.nd.tanh(x)
-    return ret
+    return math.tanh(x) if isinstance(x, float) else mx.nd.tanh(x)
 
 
 @_handle_flat_arrays_in_out
@@ -181,29 +150,22 @@ def bitwise_or(
 
 @_handle_flat_arrays_in_out
 def sinh(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.sinh(x)
-    else:
-        ret = mx.nd.sinh(x)
-    return ret
+    return math.sinh(x) if isinstance(x, float) else mx.nd.sinh(x)
 
 
 @_handle_flat_arrays_in_out
 def square(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.square(x)
-    return ret
+    return mx.nd.square(x)
 
 
 @_handle_flat_arrays_in_out
 def round(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    ret = mx.nd.round(x)
-    return ret
+    return mx.nd.round(x)
 
 
 @_handle_flat_arrays_in_out
 def trunc(x: mx.nd.NDArray) -> mx.nd.ndarray.NDArray:
-    ret = mx.np.trunc(x)
-    return ret
+    return mx.np.trunc(x)
 
 
 @_handle_flat_arrays_in_out
@@ -220,19 +182,11 @@ def abs(x: Union[float, mx.nd.NDArray]) -> mx.nd.ndarray.NDArray:
 
 
 def cos(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.cos(x)
-    else:
-        ret = mx.nd.cos(x)
-    return ret
+    return math.cos(x) if isinstance(x, float) else mx.nd.cos(x)
 
 
 def exp(x: mx.nd.NDArray) -> mx.nd.NDArray:
-    if isinstance(x, float):
-        ret = math.exp(x)
-    else:
-        ret = mx.nd.exp(x)
-    return ret
+    return math.exp(x) if isinstance(x, float) else mx.nd.exp(x)
 
 
 tan = lambda x: math.tan(x) if isinstance(x, float) else mx.nd.tan(x)

@@ -18,10 +18,10 @@ from ivy.functional.backends.tensorflow.device import dev, as_native_dev
 
 
 def is_native_array(x, exclusive=False):
-    if isinstance(x, tf.Tensor) or isinstance(x, tf.Variable):
-        if exclusive and isinstance(x, tf.Variable):
-            return False
-        return True
+    if isinstance(x, tf.Tensor):
+        return not exclusive or not isinstance(x, tf.Variable)
+    elif isinstance(x, tf.Variable):
+        return not exclusive
     return False
 
 
@@ -56,8 +56,7 @@ def floormod(
         promoted_type = tf.experimental.numpy.promote_types(x.dtype, y.dtype)
         x = tf.cast(x, promoted_type)
         y = tf.cast(y, promoted_type)
-    ret = tf.math.floormod(x, y)
-    return ret
+    return tf.math.floormod(x, y)
 
 
 def unstack(x, axis, keepdims=False):
@@ -106,11 +105,10 @@ def inplace_decrement(x, val):
             x.data = x_native
         else:
             x = ivy.Array(x_native)
+    elif ivy.is_ivy_array(x):
+        x.data = val_native
     else:
-        if ivy.is_ivy_array(x):
-            x.data = val_native
-        else:
-            x = ivy.Array(val_native)
+        x = ivy.Array(val_native)
     return x
 
 
@@ -122,11 +120,10 @@ def inplace_increment(x, val):
             x.data = x_native
         else:
             x = ivy.Array(x_native)
+    elif ivy.is_ivy_array(x):
+        x.data = val_native
     else:
-        if ivy.is_ivy_array(x):
-            x.data = val_native
-        else:
-            x = ivy.Array(val_native)
+        x = ivy.Array(val_native)
     return x
 
 
@@ -181,21 +178,20 @@ def scatter_flat(indices, updates, size=None, tensor=None, reduction="sum", *, d
             )
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     with tf.device(as_native_dev(device)):
         return res
 
 
 def _parse_ellipsis(so, ndims):
-    pre = list()
+    pre = []
     for s in so:
         if s is Ellipsis:
             break
         pre.append(s)
-    post = list()
+    post = []
     for s in reversed(so):
         if s is Ellipsis:
             break
@@ -291,10 +287,9 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", *, de
             res = tf.tensor_scatter_nd_update(tf.zeros(shape), indices, updates)
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     with tf.device(as_native_dev(device)):
         return res
 
@@ -346,10 +341,7 @@ def shape(
     x: Union[tf.Tensor, tf.Variable],
     as_tensor: bool = False,
 ) -> Union[tf.Tensor, tf.Variable, List[int]]:
-    if as_tensor:
-        return tf.shape(x)
-    else:
-        return tuple(x.shape)
+    return tf.shape(x) if as_tensor else tuple(x.shape)
 
 
 def get_num_dims(x, as_tensor=False):

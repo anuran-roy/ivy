@@ -25,8 +25,7 @@ def _linspace(start, stop, num, cont):
     increments = increment_tiled * mx.nd.array(
         mx.nd.np.linspace(1, num - 1, num - 1).tolist(), ctx=cont
     )
-    ret = mx.nd.concat(start, start + increments, dim=0)
-    return ret
+    return mx.nd.concat(start, start + increments, dim=0)
 
 
 def arange(stop, start=0, step=1, dtype=None, device=None):
@@ -47,22 +46,14 @@ def asarray(
     cont = _mxnet_init_context(default_device(device))
     if copy is None:
         copy = False
-    if copy:
-        if dtype is None and isinstance(object_in, mx.nd.NDArray):
+    if dtype is None and isinstance(object_in, mx.nd.NDArray):
+        if copy:
             return mx.nd.array(object_in, cont).as_in_context(cont)
-        if dtype is None and not isinstance(object_in, mx.nd.NDArray):
-            return mx.nd.array(object_in, cont, dtype=default_dtype(dtype, object_in))
         else:
-            dtype = as_ivy_dtype(default_dtype(dtype, object_in))
-            return mx.nd.array(object_in, cont, dtype=default_dtype(dtype, object_in))
-    else:
-        if dtype is None and isinstance(object_in, mx.nd.NDArray):
             return object_in.as_in_context(cont)
-        if dtype is None and not isinstance(object_in, mx.nd.NDArray):
-            return mx.nd.array(object_in, cont, dtype=default_dtype(dtype, object_in))
-        else:
-            dtype = as_ivy_dtype(default_dtype(dtype, object_in))
-            return mx.nd.array(object_in, cont, dtype=default_dtype(dtype, object_in))
+    if dtype is not None:
+        dtype = as_ivy_dtype(default_dtype(dtype, object_in))
+    return mx.nd.array(object_in, cont, dtype=default_dtype(dtype, object_in))
 
 
 def empty(
@@ -121,9 +112,9 @@ def linspace(start, stop, num, axis=None, device=None):
         stop = stop.reshape((-1,))
     if start_is_array and stop_is_array:
         res = [_linspace(strt, stp, num, cont) for strt, stp in zip(start, stop)]
-    elif start_is_array and not stop_is_array:
+    elif start_is_array:
         res = [_linspace(strt, stop, num, cont) for strt in start]
-    elif not start_is_array and stop_is_array:
+    elif stop_is_array:
         res = [_linspace(start, stp, num, cont) for stp in stop]
     else:
         return _linspace(start, stop, num, cont)
@@ -183,7 +174,7 @@ def zeros_like(x, dtype=None, device=None):
     if x.shape == ():
         return mx.nd.array(0.0, ctx=_mxnet_init_context(default_device(device)))
     mx_zeros = mx.nd.zeros_like(x, ctx=_mxnet_init_context(default_device(device)))
-    return mx_zeros if not dtype else mx_zeros.astype(dtype)
+    return mx_zeros.astype(dtype) if dtype else mx_zeros
 
 
 # Extra #

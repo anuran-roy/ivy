@@ -21,17 +21,9 @@ def flip(
 ) -> mx.nd.NDArray:
     num_dims = len(x.shape)
     if not num_dims:
-        if ivy.exists(out):
-            return ivy.inplace_update(out, x)
-        return x
-    if axis is None:
-        new_axis = list(range(num_dims))
-    else:
-        new_axis = axis
-    if type(new_axis) is int:
-        new_axis = [new_axis]
-    else:
-        new_axis = new_axis
+        return ivy.inplace_update(out, x) if ivy.exists(out) else x
+    new_axis = list(range(num_dims)) if axis is None else axis
+    new_axis = [new_axis] if type(new_axis) is int else new_axis
     new_axis = [item + num_dims if item < 0 else item for item in new_axis]
     ret = mx.nd.flip(x, new_axis)
     if ivy.exists(out):
@@ -67,12 +59,8 @@ def stack(
 def squeeze(x, axis=None, out: Optional[mx.nd.NDArray] = None):
     if x.shape == ():
         if axis is None or axis == 0 or axis == -1:
-            if ivy.exists(out):
-                return ivy.inplace_update(out, x)
-            return x
-        raise Exception(
-            "tried to squeeze a zero-dimensional input by axis {}".format(axis)
-        )
+            return ivy.inplace_update(out, x) if ivy.exists(out) else x
+        raise Exception(f"tried to squeeze a zero-dimensional input by axis {axis}")
     ret = mx.nd.squeeze(x, axis)
     if axis is None:
         ret = _1_dim_array_to_flat_array(ret)
@@ -100,17 +88,14 @@ def split(x, num_or_size_splits=None, axis=0, with_remainder=False):
     if x.shape == ():
         if num_or_size_splits is not None and num_or_size_splits != 1:
             raise Exception(
-                "input array had no shape, but num_sections specified was {}".format(
-                    num_or_size_splits
-                )
+                f"input array had no shape, but num_sections specified was {num_or_size_splits}"
             )
+
         return [x]
     if num_or_size_splits == 1:
         return [x]
     elif with_remainder and isinstance(num_or_size_splits, int):
-        num_or_size_splits = (
-            x.shape[axis] if not num_or_size_splits else num_or_size_splits
-        )
+        num_or_size_splits = num_or_size_splits or x.shape[axis]
         num_chunks = x.shape[axis] / num_or_size_splits
         num_chunks_int = math.floor(num_chunks)
         remainder_size = int((num_chunks - num_chunks_int) * num_or_size_splits)
@@ -133,9 +118,7 @@ def split(x, num_or_size_splits=None, axis=0, with_remainder=False):
                 for s, e in zip(starts, ends)
             ]
         return [x[so] for so in slices]
-    return mx.nd.split(
-        x, x.shape[axis] if not num_or_size_splits else num_or_size_splits, axis
-    )
+    return mx.nd.split(x, num_or_size_splits or x.shape[axis], axis)
 
 
 @_handle_flat_arrays_in_out

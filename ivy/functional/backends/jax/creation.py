@@ -80,11 +80,7 @@ def empty(
 def empty_like(
     x: JaxArray, *, dtype: jnp.dtype, device: jaxlib.xla_extension.Device
 ) -> JaxArray:
-    if dtype and str:
-        dtype = jnp.dtype(dtype)
-    else:
-        dtype = x.dtype
-
+    dtype = jnp.dtype(dtype) if dtype and str else x.dtype
     return _to_device(jnp.empty_like(x, dtype=dtype), device=device)
 
 
@@ -126,11 +122,7 @@ def full_like(
     dtype: jnp.dtype,
     device: jaxlib.xla_extension.Device,
 ) -> JaxArray:
-    if dtype and str:
-        dtype = jnp.dtype(dtype)
-    else:
-        dtype = x.dtype
-
+    dtype = jnp.dtype(dtype) if dtype and str else x.dtype
     return _to_device(
         jnp.full_like(
             x, fill_value, dtype=as_native_dtype(default_dtype(dtype, fill_value))
@@ -174,10 +166,7 @@ def ones(
 def ones_like(
     x: JaxArray, *, dtype: jnp.dtype, device: jaxlib.xla_extension.Device
 ) -> JaxArray:
-    if dtype and str:
-        dtype = jnp.dtype(dtype)
-    else:
-        dtype = x.dtype
+    dtype = jnp.dtype(dtype) if dtype and str else x.dtype
     return _to_device(jnp.ones_like(x, dtype=dtype), device=device)
 
 

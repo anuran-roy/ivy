@@ -37,7 +37,7 @@ def _wrap_function(function_name: str, static: bool) -> Callable:
         function = ivy.__dict__[function_name]
         data_idx = function.array_spec[0]
         if (
-            not (data_idx[0][0] == 0 and len(data_idx[0]) == 1)
+            (data_idx[0][0] != 0 or len(data_idx[0]) != 1)
             and args
             and ivy.is_ivy_container(args[0])
             and not static

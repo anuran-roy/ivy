@@ -13,8 +13,7 @@ def all(
         axis = tuple(range(num_dims))
     elif isinstance(axis, list):
         axis = tuple(axis)
-    ret = tf.reduce_all(tf.cast(x, tf.bool), axis=axis, keepdims=keepdims)
-    return ret
+    return tf.reduce_all(tf.cast(x, tf.bool), axis=axis, keepdims=keepdims)
 
 
 def any(
@@ -27,5 +26,4 @@ def any(
         axis = tuple(range(num_dims))
     elif isinstance(axis, list):
         axis = tuple(axis)
-    ret = tf.reduce_any(tf.cast(x, tf.bool), axis=axis, keepdims=keepdims)
-    return ret
+    return tf.reduce_any(tf.cast(x, tf.bool), axis=axis, keepdims=keepdims)

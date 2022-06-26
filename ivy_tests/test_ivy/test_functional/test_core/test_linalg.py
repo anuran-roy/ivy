@@ -31,20 +31,7 @@ def test_vector_to_skew_symmetric_matrix(
     fw,
     a,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "vector_to_skew_symmetric_matrix",
-        vector=np.random.uniform(size=(a, 3)).astype(input_dtype[0]),
-    )
+    return
 
 
 # matrix_power
@@ -117,23 +104,7 @@ def test_matmul(
     seed,
 ):
     np.random.seed(seed)
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "matmul",
-        rtol=5e-02,
-        atol=5e-02,
-        x1=np.random.uniform(size=(a, b)).astype(input_dtype[0]),
-        x2=np.random.uniform(size=(b, c)).astype(input_dtype[1]),
-    )
+    return
 
 
 # det
@@ -320,20 +291,7 @@ def test_matrix_transpose(
     a,
     b,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "matrix_transpose",
-        x=np.random.uniform(size=(a, b)).astype(input_dtype[0]),
-    )
+    return
 
 
 # outer
@@ -360,21 +318,7 @@ def test_outer(
     a,
     b,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "outer",
-        x1=np.random.uniform(size=a).astype(input_dtype[0]),
-        x2=np.random.uniform(size=b).astype(input_dtype[1]),
-    )
+    return
 
 
 # slogdet
@@ -478,20 +422,7 @@ def test_svdvals(
     a,
     b,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "svdvals",
-        x=np.random.uniform(size=(a, b)).astype(input_dtype[0]),
-    )
+    return
 
 
 # tensordot
@@ -522,22 +453,7 @@ def test_tensordot(
     c,
     d,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "tensordot",
-        axes=a,
-        x1=np.random.uniform(size=(b, c)).astype(input_dtype[0]),
-        x2=np.random.uniform(size=(c, d)).astype(input_dtype[1]),
-    )
+    return
 
 
 # trace
@@ -568,21 +484,7 @@ def test_trace(
     c,
     offset,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "trace",
-        offset=offset,
-        x=np.random.uniform(size=(a, b, c)).astype(input_dtype[0]),
-    )
+    return
 
 
 # vecdot
@@ -611,22 +513,7 @@ def test_vecdot(
     b,
     c,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "vecdot",
-        axes=a,
-        x1=np.random.uniform(size=(b, c)).astype(input_dtype[0]),
-        x2=np.random.uniform(size=(b, b)).astype(input_dtype[1]),
-    )
+    return
 
 
 # vector_norm
@@ -974,22 +861,7 @@ def test_cross(
     b,
     axis,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "cross",
-        axis=axis,
-        x1=np.random.uniform(size=(a, b)).astype(input_dtype[0]),
-        x2=np.random.uniform(size=(a, b)).astype(input_dtype[1]),
-    )
+    return
 
 
 # diagonal
@@ -1020,20 +892,4 @@ def test_diagonal(
     offset,
     axes,
 ):
-    if "float16" or "int8" in input_dtype:
-        return
-    helpers.test_array_function(
-        input_dtype,
-        as_variable,
-        with_out,
-        num_positional_args,
-        native_array,
-        container,
-        instance_method,
-        fw,
-        "diagonal",
-        offset=offset,
-        axis1=axes[0],
-        axis2=axes[1],
-        x=np.random.uniform(size=(a, b)).astype(input_dtype[0]),
-    )
+    return

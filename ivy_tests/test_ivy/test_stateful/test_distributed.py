@@ -88,26 +88,23 @@ def test_distributed_training(bs_ic_oc, device, call):
         # NumPy does not support gradients
         pytest.skip()
 
-    # devices and inputs
-    devices = list()
-    xs = dict()
-
     # first device
     dev0 = device
-    devices.append(dev0)
-
+    devices = [dev0]
     # first input
     batch_shape, input_channels, output_channels = bs_ic_oc
     dev_batch_shape = [int(batch_shape[0] / 2)] + batch_shape[1:]
-    xs[dev0] = ivy.asarray(
-        ivy.linspace(
-            ivy.zeros(dev_batch_shape),
-            ivy.ones(dev_batch_shape),
-            input_channels,
-            device=dev0,
-        ),
-        dtype="float32",
-    )
+    xs = {
+        dev0: ivy.asarray(
+            ivy.linspace(
+                ivy.zeros(dev_batch_shape),
+                ivy.ones(dev_batch_shape),
+                input_channels,
+                device=dev0,
+            ),
+            dtype="float32",
+        )
+    }
 
     # second device
     if "gpu" in device and ivy.num_gpus() > 1:
@@ -140,7 +137,7 @@ def test_distributed_training(bs_ic_oc, device, call):
     loss_tm1 = 1e12
     loss = None
     grads = None
-    for i in range(10):
+    for _ in range(10):
         loss_n_grads = ivy.MultiDevIter(
             ivy.map(
                 map_fn,
@@ -188,26 +185,23 @@ def test_distributed_multiprocess_training(bs_ic_oc, device, call):
         # ToDo: add support for other frameworks, currently only supported for torch
         pytest.skip()
 
-    # devices and inputs
-    devices = list()
-    xs = dict()
-
     # first device
     dev0 = device
-    devices.append(dev0)
-
+    devices = [dev0]
     # first input
     batch_shape, input_channels, output_channels = bs_ic_oc
     dev_batch_shape = [int(batch_shape[0] / 2)] + batch_shape[1:]
-    xs[dev0] = ivy.astype(
-        ivy.linspace(
-            ivy.zeros(dev_batch_shape),
-            ivy.ones(dev_batch_shape),
-            input_channels,
-            device=dev0,
-        ),
-        dtype="float32",
-    )
+    xs = {
+        dev0: ivy.astype(
+            ivy.linspace(
+                ivy.zeros(dev_batch_shape),
+                ivy.ones(dev_batch_shape),
+                input_channels,
+                device=dev0,
+            ),
+            dtype="float32",
+        )
+    }
 
     # second device
     if "gpu" in device and ivy.num_gpus() > 1:
@@ -257,7 +251,7 @@ def test_distributed_multiprocess_training(bs_ic_oc, device, call):
     loss_tm1 = 1e12
     loss = None
     grads = None
-    for i in range(10):
+    for _ in range(10):
         loss, grads = dev_mapper.map(xn=x, vc=module.v.dev_clone(devices))
         module.v = optim.step(module.v, grads)
         assert loss < loss_tm1
@@ -297,26 +291,23 @@ def test_to_ivy_module_distributed(
         # Currently only implemented for PyTorch
         pytest.skip()
 
-    # devices and inputs
-    devices = list()
-    xs = dict()
-
     # first device
     dev0 = device
-    devices.append(dev0)
-
+    devices = [dev0]
     # first input
     batch_shape, input_channels, output_channels = bs_ic_oc
     dev_batch_shape = [int(batch_shape[0] / 2)] + batch_shape[1:]
-    xs[dev0] = ivy.astype(
-        ivy.linspace(
-            ivy.zeros(dev_batch_shape),
-            ivy.ones(dev_batch_shape),
-            input_channels,
-            device=dev0,
-        ),
-        dtype="float32",
-    )
+    xs = {
+        dev0: ivy.astype(
+            ivy.linspace(
+                ivy.zeros(dev_batch_shape),
+                ivy.ones(dev_batch_shape),
+                input_channels,
+                device=dev0,
+            ),
+            dtype="float32",
+        )
+    }
 
     # second device
     if "gpu" in device and ivy.num_gpus() > 1:
@@ -375,7 +366,7 @@ def test_to_ivy_module_distributed(
     loss_tm1 = 1e12
     loss = None
     grads = None
-    for i in range(10):
+    for _ in range(10):
         loss_n_grads = ivy.MultiDevIter(
             ivy.map(
                 map_fn,

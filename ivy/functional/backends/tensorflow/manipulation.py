@@ -26,8 +26,7 @@ def concat(xs: List[tf.Tensor], axis: int = 0) -> Union[tf.Tensor, tf.Variable]:
         axis = 0
         if is_tuple:
             xs = tuple(xs)
-    ret = tf.concat(xs, axis)
-    return ret
+    return tf.concat(xs, axis)
 
 
 def expand_dims(
@@ -35,8 +34,7 @@ def expand_dims(
     axis: int = 0,
 ) -> Union[tf.Tensor, tf.Variable]:
     try:
-        ret = tf.expand_dims(x, axis)
-        return ret
+        return tf.expand_dims(x, axis)
     except tf.errors.InvalidArgumentError as error:
         raise IndexError(error)
 
@@ -46,37 +44,26 @@ def flip(
     axis: Optional[Union[int, Tuple[int], List[int]]] = None,
     out: Optional[tf.Tensor] = None
 ) -> Union[tf.Tensor, tf.Variable]:
-    num_dims = len(x.shape)
-    if not num_dims:
-        ret = x
-    else:
-        if axis is None:
-            new_axis = list(range(num_dims))
-        else:
-            new_axis = axis
-        if type(new_axis) is int:
-            new_axis = [new_axis]
-        else:
-            new_axis = new_axis
-        new_axis = [item + num_dims if item < 0 else item for item in new_axis]
-        ret = tf.reverse(x, new_axis)
-    return ret
+    if not (num_dims := len(x.shape)):
+        return x
+    new_axis = list(range(num_dims)) if axis is None else axis
+    new_axis = [new_axis] if type(new_axis) is int else new_axis
+    new_axis = [item + num_dims if item < 0 else item for item in new_axis]
+    return tf.reverse(x, new_axis)
 
 
 def permute_dims(
     x: Union[tf.Tensor, tf.Variable],
     axes: Tuple[int, ...],
 ) -> Union[tf.Tensor, tf.Variable]:
-    ret = tf.transpose(x, perm=axes)
-    return ret
+    return tf.transpose(x, perm=axes)
 
 
 def reshape(
     x: Union[tf.Tensor, tf.Variable],
     shape: Tuple[int, ...],
 ) -> Union[tf.Tensor, tf.Variable]:
-    ret = tf.reshape(x, shape)
-    return ret
+    return tf.reshape(x, shape)
 
 
 def roll(
@@ -89,12 +76,11 @@ def roll(
         axis = 0
         x = tf.reshape(x, [-1])
         roll = tf.roll(x, shift, axis)
-        ret = tf.reshape(roll, originalShape)
+        return tf.reshape(roll, originalShape)
     else:
         if isinstance(shift, int) and (type(axis) in [list, tuple]):
             shift = [shift for _ in range(len(axis))]
-        ret = tf.roll(x, shift, axis)
-    return ret
+        return tf.roll(x, shift, axis)
 
 
 def squeeze(
@@ -104,11 +90,10 @@ def squeeze(
     if isinstance(axis, int):
         if x.shape[axis] > 1:
             raise ValueError(
-                "Expected dimension of size 1, but found dimension size {}".format(
-                    x.shape[axis]
-                )
+                f"Expected dimension of size 1, but found dimension size {x.shape[axis]}"
             )
-        ret = tf.squeeze(x, axis)
+
+        return tf.squeeze(x, axis)
     else:
         if isinstance(axis, tuple):
             axis = list(axis)
@@ -123,22 +108,19 @@ def squeeze(
         for i in axis_updated_after_squeeze:
             if x.shape[i] > 1:
                 raise ValueError(
-                    "Expected dimension of size 1, but found dimension size {}".format(
-                        x.shape[i]
-                    )
+                    f"Expected dimension of size 1, but found dimension size {x.shape[i]}"
                 )
+
             else:
                 x = tf.squeeze(x, i)
-        ret = x
-    return ret
+        return x
 
 
 def stack(
     x: Union[Tuple[tf.Tensor], List[tf.Tensor]],
     axis: Optional[int] = 0,
 ) -> Union[tf.Tensor, tf.Variable]:
-    ret = tf.experimental.numpy.stack(x, axis)
-    return ret
+    return tf.experimental.numpy.stack(x, axis)
 
 
 # Extra #
@@ -149,10 +131,9 @@ def split(x, num_or_size_splits=None, axis=0, with_remainder=False):
     if x.shape == ():
         if num_or_size_splits is not None and num_or_size_splits != 1:
             raise Exception(
-                "input array had no shape, but num_sections specified was {}".format(
-                    num_or_size_splits
-                )
+                f"input array had no shape, but num_sections specified was {num_or_size_splits}"
             )
+
         return [x]
     if num_or_size_splits is None:
         dim_size = tf.shape(x)[axis]
@@ -173,8 +154,7 @@ def repeat(
     repeats: Union[int, List[int]],
     axis: int = None,
 ) -> Union[tf.Tensor, tf.Variable]:
-    ret = tf.repeat(x, repeats, axis)
-    return ret
+    return tf.repeat(x, repeats, axis)
 
 
 def tile(x, reps):
@@ -184,22 +164,19 @@ def tile(x, reps):
         reps = [reps]
     if isinstance(reps, tf.Tensor) and reps.shape == ():
         reps = tf.reshape(reps, (-1,))
-    ret = tf.tile(x, reps)
-    return ret
+    return tf.tile(x, reps)
 
 
 def constant_pad(x, pad_width, value=0):
     if x.shape == ():
         x = tf.reshape(x, (-1,))
-    ret = tf.pad(x, pad_width, constant_values=value)
-    return ret
+    return tf.pad(x, pad_width, constant_values=value)
 
 
 def zero_pad(x, pad_width):
     if x.shape == ():
         x = tf.reshape(x, (-1,))
-    ret = tf.pad(x, pad_width)
-    return ret
+    return tf.pad(x, pad_width)
 
 
 def swapaxes(x, axis0, axis1):
@@ -212,8 +189,7 @@ def swapaxes(x, axis0, axis1):
     config.insert(axis0, axis1)
     config.pop(axis1)
     config.insert(axis1, axis0)
-    ret = tf.transpose(x, config)
-    return ret
+    return tf.transpose(x, config)
 
 
 def clip(

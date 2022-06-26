@@ -83,17 +83,20 @@ def test_container_list_stack(device, call):
 
 def test_container_unify(device, call):
 
-    # devices and containers
-    devices = list()
     dev0 = device
-    devices.append(dev0)
-    conts = dict()
-    conts[dev0] = Container(
-        {
-            "a": ivy.array([1], device=dev0),
-            "b": {"c": ivy.array([2], device=dev0), "d": ivy.array([3], device=dev0)},
-        }
-    )
+    devices = [dev0]
+    conts = {
+        dev0: Container(
+            {
+                "a": ivy.array([1], device=dev0),
+                "b": {
+                    "c": ivy.array([2], device=dev0),
+                    "d": ivy.array([3], device=dev0),
+                },
+            }
+        )
+    }
+
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         dev1 = device[:-1] + str(idx)
@@ -706,11 +709,7 @@ def test_container_slice_keys(str_slice, device, call):
     e_val = ivy.array([5], device=device)
 
     # slice
-    if str_slice:
-        slc = "b:d"
-    else:
-        slc = slice(1, 4, 1)
-
+    slc = "b:d" if str_slice else slice(1, 4, 1)
     # without dict
     cont = Container({"a": a_val, "b": b_val, "c": c_val, "d": d_val, "e": e_val})
     cont_sliced = cont.slice_keys(slc)
@@ -1147,10 +1146,8 @@ def test_container_clone(device, call):
     }
     container = Container(dict_in)
 
-    # devices
-    devices = list()
     device0 = device
-    devices.append(device0)
+    devices = [device0]
     if "gpu" in device and ivy.num_gpus() > 1:
         idx = ivy.num_gpus() - 1
         device1 = device[:-1] + str(idx)
@@ -1159,9 +1156,9 @@ def test_container_clone(device, call):
     # without key_chains specification
     container_cloned = container.dev_clone(devices)
     assert isinstance(container_cloned, ivy.DevClonedItem)
-    assert min([cont.dev_str == ds for ds, cont in container_cloned.items()])
+    assert min(cont.dev_str == ds for ds, cont in container_cloned.items())
     assert ivy.Container.multi_map(
-        lambda xs, _: ivy.arrays_equal(xs), [c for c in container_cloned.values()]
+        lambda xs, _: ivy.arrays_equal(xs), list(container_cloned.values())
     ).all_true()
 
 
@@ -1193,7 +1190,7 @@ def test_container_distribute(devs_as_dict, device, call):
     # without key_chains specification
     container_dist = container.dev_dist(devices)
     assert isinstance(container_dist, ivy.DevDistItem)
-    assert min([cont.dev_str == ds for ds, cont in container_dist.items()])
+    assert min(cont.dev_str == ds for ds, cont in container_dist.items())
     for i, sub_cont in enumerate(container_dist.values()):
         assert np.array_equal(
             ivy.to_numpy(sub_cont.a),
@@ -4091,7 +4088,7 @@ def test_container_reverse_scalar_less_than(device, call):
             },
         }
     )
-    container = 2 < container
+    container = container > 2
     assert np.allclose(ivy.to_numpy(container["a"]), np.array([False]))
     assert np.allclose(ivy.to_numpy(container.a), np.array([False]))
     assert np.allclose(ivy.to_numpy(container["b"]["c"]), np.array([False]))
@@ -4157,7 +4154,7 @@ def test_container_reverse_scalar_less_than_or_equal_to(device, call):
             },
         }
     )
-    container = 2 <= container
+    container = container >= 2
     assert np.allclose(ivy.to_numpy(container["a"]), np.array([False]))
     assert np.allclose(ivy.to_numpy(container.a), np.array([False]))
     assert np.allclose(ivy.to_numpy(container["b"]["c"]), np.array([True]))
@@ -4223,7 +4220,7 @@ def test_container_reverse_scalar_equal_to(device, call):
             },
         }
     )
-    container = 2 == container
+    container = container == 2
     assert np.allclose(ivy.to_numpy(container["a"]), np.array([False]))
     assert np.allclose(ivy.to_numpy(container.a), np.array([False]))
     assert np.allclose(ivy.to_numpy(container["b"]["c"]), np.array([True]))
@@ -4289,7 +4286,7 @@ def test_container_reverse_scalar_not_equal_to(device, call):
             },
         }
     )
-    container = 2 != container
+    container = container != 2
     assert np.allclose(ivy.to_numpy(container["a"]), np.array([True]))
     assert np.allclose(ivy.to_numpy(container.a), np.array([True]))
     assert np.allclose(ivy.to_numpy(container["b"]["c"]), np.array([False]))
@@ -4355,7 +4352,7 @@ def test_container_reverse_scalar_greater_than(device, call):
             },
         }
     )
-    container = 2 > container
+    container = container < 2
     assert np.allclose(ivy.to_numpy(container["a"]), np.array([True]))
     assert np.allclose(ivy.to_numpy(container.a), np.array([True]))
     assert np.allclose(ivy.to_numpy(container["b"]["c"]), np.array([False]))
@@ -4421,7 +4418,7 @@ def test_container_reverse_scalar_greater_than_or_equal_to(device, call):
             },
         }
     )
-    container = 2 >= container
+    container = container <= 2
     assert np.allclose(ivy.to_numpy(container["a"]), np.array([True]))
     assert np.allclose(ivy.to_numpy(container.a), np.array([True]))
     assert np.allclose(ivy.to_numpy(container["b"]["c"]), np.array([True]))

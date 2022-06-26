@@ -35,10 +35,7 @@ def random_normal(
     *,
     device: torch.device,
 ) -> torch.Tensor:
-    if shape is None:
-        true_shape: List[int] = []
-    else:
-        true_shape: List[int] = shape
+    true_shape: List[int] = [] if shape is None else shape
     mean = mean.item() if isinstance(mean, torch.Tensor) else mean
     std = std.item() if isinstance(std, torch.Tensor) else std
     return torch.normal(mean, std, true_shape, device=default_device(device))

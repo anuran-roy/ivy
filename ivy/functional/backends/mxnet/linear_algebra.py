@@ -18,11 +18,10 @@ DET_THRESHOLD = 1e-12
 def cholesky(x: mx.nd.NDArray, upper: bool = False) -> mx.nd.NDArray:
     if not upper:
         return mx.np.linalg.cholesky(x)
-    else:
-        axes = list(range(len(x.shape) - 2)) + [len(x.shape) - 1, len(x.shape) - 2]
-        return mx.np.transpose(
-            mx.np.linalg.cholesky(mx.np.transpose(x, axes=axes)), axes=axes
-        )
+    axes = list(range(len(x.shape) - 2)) + [len(x.shape) - 1, len(x.shape) - 2]
+    return mx.np.transpose(
+        mx.np.linalg.cholesky(mx.np.transpose(x, axes=axes)), axes=axes
+    )
 
 
 def cross(x1: mx.nd.NDArray, x2: mx.nd.NDArray, axis: int = -1) -> mx.nd.NDArray:
@@ -84,9 +83,9 @@ def matrix_norm(x, p=2, axes=None, keepdims=False):
     axes = (-2, -1) if axes is None else axes
     if isinstance(axes, int):
         raise Exception(
-            "if specified, axes must be a length-2 sequence of ints,"
-            "but found {} of type {}".format(axes, type(axes))
+            f"if specified, axes must be a length-2 sequence of ints,but found {axes} of type {type(axes)}"
         )
+
     return mx.nd.norm(x, p, axes, keepdims=keepdims)
 
 
@@ -113,17 +112,12 @@ def pinv(x):
     x_dim, y_dim = x.shape[-2:]
     if x_dim == y_dim and mx.nd.sum(mx.nd.linalg.det(x) > DET_THRESHOLD) > 0:
         return inv(x)
-    else:
-        xT = mx.nd.swapaxes(x, -1, -2)
-        xT_x = ivy.to_native(matmul(xT, x))
-        if mx.nd.linalg.det(xT_x) > DET_THRESHOLD:
-            return matmul(inv(xT_x), xT)
-        else:
-            x_xT = ivy.to_native(matmul(x, xT))
-            if mx.nd.linalg.det(x_xT) > DET_THRESHOLD:
-                return matmul(xT, inv(x_xT))
-            else:
-                return xT
+    xT = mx.nd.swapaxes(x, -1, -2)
+    xT_x = ivy.to_native(matmul(xT, x))
+    if mx.nd.linalg.det(xT_x) > DET_THRESHOLD:
+        return matmul(inv(xT_x), xT)
+    x_xT = ivy.to_native(matmul(x, xT))
+    return matmul(xT, inv(x_xT)) if mx.nd.linalg.det(x_xT) > DET_THRESHOLD else xT
 
 
 def qr(x, mode):
@@ -135,9 +129,7 @@ def slogdet(
 ) -> Union[ivy.Array, Tuple[ivy.Array, ...]]:
     results = namedtuple("slogdet", "sign logabsdet")
     sign, logabsdet = mx.linalg.slogdet(x)
-    res = results(sign, logabsdet)
-
-    return res
+    return results(sign, logabsdet)
 
 
 def svd(x: NDArray, full_matrices: bool = True) -> Union[NDArray, Tuple[NDArray, ...]]:

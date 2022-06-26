@@ -1,5 +1,6 @@
 """Collection of device Ivy functions."""
 
+
 # global
 import os
 import gc
@@ -29,10 +30,10 @@ from ivy.func_wrapper import (
     handle_nestable,
 )
 
-default_device_stack = list()
-dev_handles = dict()
-split_factors = dict()
-max_chunk_sizes = dict()
+default_device_stack = []
+dev_handles = {}
+split_factors = {}
+max_chunk_sizes = {}
 
 
 # Extra #
@@ -128,7 +129,7 @@ def get_all_ivy_arrays_on_dev(device: ivy.Device) -> ivy.Container:
     },
     """
     device = ivy.as_ivy_dev(device)
-    all_arrays = list()
+    all_arrays = []
     for obj in gc.get_objects():
         # noinspection PyBroadException
         try:
@@ -136,7 +137,7 @@ def get_all_ivy_arrays_on_dev(device: ivy.Device) -> ivy.Container:
                 all_arrays.append(obj)
         except Exception:
             pass
-    return ivy.Container(dict(zip([str(id(a)) for a in all_arrays], all_arrays)))
+    return ivy.Container(dict(zip([id(a) for a in all_arrays], all_arrays)))
 
 
 def num_ivy_arrays_on_dev(device: ivy.Device) -> int:
@@ -397,8 +398,7 @@ def total_mem_on_dev(device: Union[ivy.Device, ivy.NativeDevice]) -> float:
         return psutil.virtual_memory().total / 1e9
     else:
         raise Exception(
-            'Invalid device string input, must be on the form "gpu:idx" or "cpu", '
-            "but found {}".format(device)
+            f'Invalid device string input, must be on the form "gpu:idx" or "cpu", but found {device}'
         )
 
 
@@ -436,8 +436,7 @@ def used_mem_on_dev(
         return (vm.total - vm.available) / 1e9
     else:
         raise Exception(
-            'Invalid device string input, must be on the form "gpu:idx" or "cpu", '
-            "but found {}".format(device)
+            f'Invalid device string input, must be on the form "gpu:idx" or "cpu", but found {device}'
         )
 
 
@@ -475,8 +474,7 @@ def percent_used_mem_on_dev(
         return (1 - (vm.available / vm.total)) * 100
     else:
         raise Exception(
-            'Invalid device string input, must be on the form "gpu:idx" or "cpu", '
-            "but found {}".format(device)
+            f'Invalid device string input, must be on the form "gpu:idx" or "cpu", but found {device}'
         )
 
 
@@ -504,8 +502,7 @@ def dev_util(device: Union[ivy.Device, ivy.NativeDevice]) -> float:
         return nvidia_smi.nvmlDeviceGetUtilizationRates(handle).gpu
     else:
         raise Exception(
-            'Invalid device string input, must be on the form "gpu:idx" or "cpu", '
-            "but found {}".format(device)
+            f'Invalid device string input, must be on the form "gpu:idx" or "cpu", but found {device}'
         )
 
 
@@ -627,11 +624,7 @@ def default_device(
 
     """
     if ivy.exists(device):
-        if as_native is True:
-            return ivy.as_native_dev(device)
-        elif as_native is False:
-            return ivy.as_ivy_dev(device)
-        return device
+        return ivy.as_native_dev(device) if as_native else ivy.as_ivy_dev(device)
     as_native = ivy.default(as_native, False)
     if ivy.exists(item):
         if isinstance(item, (list, tuple, dict)) and len(item) == 0:
@@ -831,7 +824,7 @@ def split_func_call(
             max_chunk_size = max_chunk_sizes[shape_key]
         else:
             max_chunk_size = 0
-        max_dim = max([inp.shape[inp_ax] for inp, inp_ax in zip(inputs, input_axes)])
+        max_dim = max(inp.shape[inp_ax] for inp, inp_ax in zip(inputs, input_axes))
         if max_dim > max_chunk_size:
             max_chunk_sizes[shape_key] = max_dim
             max_chunk_size = max_dim
@@ -882,9 +875,12 @@ def split_func_call(
         return sums_or_means[0] if len(sums_or_means) == 1 else tuple(sums_or_means)
     rets = [func(*i) for i in zip(*inputs_split)]
     rets = [
-        tuple([post_fn(r) for r in ret]) if isinstance(ret, tuple) else (post_fn(ret),)
+        tuple(post_fn(r) for r in ret)
+        if isinstance(ret, tuple)
+        else (post_fn(ret),)
         for ret in rets
     ]
+
     num_outputs = len(rets[0])
     if output_axes is None:
         output_axes = [input_axes[0]] * num_outputs
@@ -911,7 +907,7 @@ class MultiDev:
         return self._length
 
     def __repr__(self):
-        return "MultiDev(" + self._data.__repr__() + ")"
+        return f"MultiDev({self._data.__repr__()})"
 
 
 class MultiDevItem(MultiDev):
@@ -933,7 +929,7 @@ class MultiDevItem(MultiDev):
 
     def _slice(self, slice_obj: slice):
         stacked_dim_size = 0
-        ret_dict = dict()
+        ret_dict = {}
         for ds, sub_item in self._data.items():
             if not hasattr(sub_item, "shape"):
                 continue
@@ -968,7 +964,7 @@ class MultiDevItem(MultiDev):
         return self._data.items()
 
     def __repr__(self):
-        return "MultiDevItem(" + self._data.__repr__() + ")"
+        return f"MultiDevItem({self._data.__repr__()})"
 
 
 class MultiDevIter(MultiDev):
@@ -1006,7 +1002,7 @@ class MultiDevIter(MultiDev):
         return ret
 
     def __repr__(self):
-        return "MultiDevIter(" + self._data.__repr__() + ")"
+        return f"MultiDevIter({self._data.__repr__()})"
 
 
 class MultiDevNest(MultiDevIter):
@@ -1030,7 +1026,7 @@ class MultiDevNest(MultiDevIter):
         )
 
     def __repr__(self):
-        return "MultiDevNest(" + self._data.__repr__() + ")"
+        return f"MultiDevNest({self._data.__repr__()})"
 
 
 # Device Distribution #
@@ -1038,17 +1034,17 @@ class MultiDevNest(MultiDevIter):
 
 class DevDistItem(MultiDevItem):
     def __repr__(self):
-        return "DevDistItem(" + self._data.__repr__() + ")"
+        return f"DevDistItem({self._data.__repr__()})"
 
 
 class DevDistIter(MultiDevIter):
     def __repr__(self):
-        return "DevDistIter(" + self._data.__repr__() + ")"
+        return f"DevDistIter({self._data.__repr__()})"
 
 
 class DevDistNest(MultiDevNest):
     def __repr__(self):
-        return "DevDistNest(" + self._data.__repr__() + ")"
+        return f"DevDistNest({self._data.__repr__()})"
 
 
 @handle_nestable
@@ -1188,17 +1184,17 @@ def dev_dist_nest(
 
 class DevClonedItem(MultiDevItem):
     def __repr__(self):
-        return "DevClonedItem(" + self._data.__repr__() + ")"
+        return f"DevClonedItem({self._data.__repr__()})"
 
 
 class DevClonedIter(MultiDevIter):
     def __repr__(self):
-        return "DevClonedIter(" + self._data.__repr__() + ")"
+        return f"DevClonedIter({self._data.__repr__()})"
 
 
 class DevClonedNest(MultiDevNest):
     def __repr__(self):
-        return "DevClonedNest(" + self._data.__repr__() + ")"
+        return f"DevClonedNest({self._data.__repr__()})"
 
 
 @handle_nestable
@@ -1356,7 +1352,7 @@ def _concat_unify_array(xs, device, axis):
 # noinspection PyShadowingNames
 def _sum_unify_array(xs, device, _=None):
     return sum(
-        [ivy.to_device(x_sub, device=device) for x_sub in xs.values()],
+        (ivy.to_device(x_sub, device=device) for x_sub in xs.values()),
         start=ivy.zeros([]),
     )
 
@@ -1562,9 +1558,9 @@ class DevMapper(abc.ABC):
         self._devs = devices
         self._num_workers = len(devices)
         self._timeout = ivy.default(timeout, ivy.queue_timeout())
-        self._workers = dict()
-        self._input_queues = dict()
-        self._output_queues = dict()
+        self._workers = {}
+        self._input_queues = {}
+        self._output_queues = {}
         self._worker_class = worker_class
         for i, ds in enumerate(self._devs):
             input_queue = queue_class()
@@ -1754,8 +1750,8 @@ class DevManager:
             Whether to tune the per-device split sizes internally. Default is True.
 
         """
-        with_dev_mapping = True if ivy.exists(dev_mapper) else False
-        tune_dev_alloc = False if not with_dev_mapping else tune_dev_alloc
+        with_dev_mapping = bool(ivy.exists(dev_mapper))
+        tune_dev_alloc = tune_dev_alloc if with_dev_mapping else False
         self._dev_mapper = dev_mapper
         devices = ivy.default(devices, [ivy.default_device()])
         self._num_devs = len(devices)
@@ -1789,8 +1785,8 @@ class DevManager:
         else:
             self._tune_step = None
         self._observed_configs = set()
-        self._da_directions = dict()
-        self._da_directions_flipped = dict()
+        self._da_directions = {}
+        self._da_directions_flipped = {}
         if isinstance(devices, dict):
             self._dev_da_ratios = devices
         else:
@@ -1857,7 +1853,7 @@ class DevManager:
         elif excess_size < 0:
             for i in range(abs(excess_size)):
                 split_sizes[i] += 1
-        self._devs_da = {k: v for k, v in zip(self._devs_keys, split_sizes)}
+        self._devs_da = dict(zip(self._devs_keys, split_sizes))
 
     def _compute_dev_da_ratios(self):
         self._dev_da_ratios = {k: v / self._dim_size for k, v in self._devs_da.items()}

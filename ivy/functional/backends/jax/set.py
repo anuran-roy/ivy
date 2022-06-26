@@ -39,9 +39,6 @@ def unique_all(x: JaxArray) -> Tuple[JaxArray, JaxArray, JaxArray, JaxArray]:
         nan_idx = jnp.where(jnp.isnan(x.flatten()))[0]
 
         indices = jnp.concatenate((indices[:-1], nan_idx), axis=0).astype(indices.dtype)
-    else:
-        pass
-
     return UniqueAll(
         values.astype(x.dtype), indices, jnp.reshape(inverse_indices, x.shape), counts
     )
@@ -71,10 +68,10 @@ def unique_inverse(x: JaxArray) -> Tuple[JaxArray, JaxArray]:
 
 def unique_values(x: JaxArray) -> JaxArray:
     nan_count = jnp.count_nonzero(jnp.isnan(x))
-    if nan_count > 1:
-        unique = jnp.append(
+    return (
+        jnp.append(
             jnp.unique(x.flatten()), jnp.full(nan_count - 1, jnp.nan)
         ).astype(x.dtype)
-    else:
-        unique = jnp.unique(x.flatten()).astype(x.dtype)
-    return unique
+        if nan_count > 1
+        else jnp.unique(x.flatten()).astype(x.dtype)
+    )

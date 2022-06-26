@@ -72,27 +72,24 @@ def pytest_generate_tests(metafunc):
 
     # implicit
     raw_value = metafunc.config.getoption("--with_implicit")
-    if raw_value == "true":
-        implicit_modes = [True, False]
-    else:
-        implicit_modes = [False]
-
+    implicit_modes = [True, False] if raw_value == "true" else [False]
     # create test configs
-    configs = list()
+    configs = []
     for backend_str in backend_strs:
         for device in devices:
             for compile_graph in compile_modes:
-                for implicit in implicit_modes:
-                    configs.append(
-                        (
-                            device,
-                            TEST_BACKENDS[backend_str](),
-                            compile_graph,
-                            implicit,
-                            TEST_CALL_METHODS[backend_str],
-                            backend_str,
-                        )
+                configs.extend(
+                    (
+                        device,
+                        TEST_BACKENDS[backend_str](),
+                        compile_graph,
+                        implicit,
+                        TEST_CALL_METHODS[backend_str],
+                        backend_str,
                     )
+                    for implicit in implicit_modes
+                )
+
     metafunc.parametrize("device,f,compile_graph,implicit,call,fw", configs)
 
 

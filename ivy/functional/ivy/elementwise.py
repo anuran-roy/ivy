@@ -1557,9 +1557,9 @@ def floor_divide(
         numeric data type.
 
     """
-    if isinstance(x1, float) or isinstance(x1, int):
+    if isinstance(x1, (float, int)):
         x1 = ivy.array(x1, dtype=x1.dtype)
-    if isinstance(x2, float) or isinstance(x2, int):
+    if isinstance(x2, (float, int)):
         x2 = ivy.array(x2, dtype=x2.dtype)
     return current_backend(x1, x2).floor_divide(x1, x2)
 

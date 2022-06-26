@@ -67,14 +67,11 @@ def inplace_update(
 
 
 def is_native_array(x, exclusive=False):
-    if isinstance(x, np.ndarray):
-        return True
-    return False
+    return isinstance(x, np.ndarray)
 
 
 def floormod(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    ret = np.asarray(x % y)
-    return ret
+    return np.asarray(x % y)
 
 
 def unstack(x, axis, keepdims=False):
@@ -152,10 +149,9 @@ def scatter_flat(indices, updates, size=None, tensor=None, reduction="sum", *, d
             target = np.where(target == -1e12, 0.0, target)
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     return _to_device(target, device)
 
 
@@ -194,10 +190,9 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", *, de
             target = np.where(target == -1e12, 0.0, target)
     else:
         raise Exception(
-            'reduction is {}, but it must be one of "sum", "min" or "max"'.format(
-                reduction
-            )
+            f'reduction is {reduction}, but it must be one of "sum", "min" or "max"'
         )
+
     return _to_device(target, device)
 
 
@@ -222,7 +217,7 @@ def gather_nd(params, indices, *, device: str):
     implicit_indices_factor = int(result_dim_sizes[num_index_dims - 1].item())
     flat_params = np.reshape(params, (-1,))
     new_shape = [1] * (len(indices_shape) - 1) + [num_index_dims]
-    indices_scales = np.reshape(result_dim_sizes[0:num_index_dims], new_shape)
+    indices_scales = np.reshape(result_dim_sizes[:num_index_dims], new_shape)
     indices_for_flat_tiled = np.tile(
         np.reshape(np.sum(indices * indices_scales, -1, keepdims=True), (-1, 1)),
         (1, implicit_indices_factor),
@@ -249,8 +244,7 @@ def indices_where(x):
     where_x = np.where(x)
     if len(where_x) == 1:
         return np.expand_dims(where_x[0], -1)
-    res = np.concatenate([np.expand_dims(item, -1) for item in where_x], -1)
-    return res
+    return np.concatenate([np.expand_dims(item, -1) for item in where_x], -1)
 
 
 # noinspection PyUnusedLocal
@@ -261,10 +255,7 @@ def one_hot(indices, depth, *, device):
 
 
 def shape(x: np.ndarray, as_tensor: bool = False) -> Union[np.ndarray, List[int]]:
-    if as_tensor:
-        return np.asarray(np.shape(x))
-    else:
-        return x.shape
+    return np.asarray(np.shape(x)) if as_tensor else x.shape
 
 
 def get_num_dims(x, as_tensor=False):

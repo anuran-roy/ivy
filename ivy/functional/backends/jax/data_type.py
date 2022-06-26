@@ -93,9 +93,8 @@ def astype(x: JaxArray, dtype: jnp.dtype, *, copy: bool = True) -> JaxArray:
     else:
         if x.dtype == dtype:
             return x
-        else:
-            new_tensor = jnp.array(x)
-            return new_tensor.astype(dtype)
+        new_tensor = jnp.array(x)
+        return new_tensor.astype(dtype)
     return x.astype(dtype)
 
 
@@ -157,9 +156,7 @@ def dtype_bits(dtype_in):
 
 
 def dtype(x, as_native=False):
-    if as_native:
-        return ivy.to_native(x).dtype
-    return as_ivy_dtype(x.dtype)
+    return ivy.to_native(x).dtype if as_native else as_ivy_dtype(x.dtype)
 
 
 def as_ivy_dtype(dtype_in):
@@ -169,6 +166,8 @@ def as_ivy_dtype(dtype_in):
 
 
 def as_native_dtype(dtype_in):
-    if not isinstance(dtype_in, str):
-        return dtype_in
-    return native_dtype_dict[ivy.Dtype(dtype_in)]
+    return (
+        native_dtype_dict[ivy.Dtype(dtype_in)]
+        if isinstance(dtype_in, str)
+        else dtype_in
+    )

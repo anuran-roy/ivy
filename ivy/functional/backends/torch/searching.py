@@ -11,8 +11,7 @@ def argmax(
 ) -> torch.Tensor:
 
     x = torch.tensor(x)
-    ret = torch.argmax(x, dim=axis, keepdim=keepdims, out=out)
-    return ret
+    return torch.argmax(x, dim=axis, keepdim=keepdims, out=out)
 
 
 def argmin(
@@ -24,8 +23,7 @@ def argmin(
 ) -> torch.Tensor:
 
     x = torch.tensor(x)
-    ret = torch.argmin(x, axis=axis, keepdim=keepdims, out=out)
-    return ret
+    return torch.argmin(x, axis=axis, keepdim=keepdims, out=out)
 
 
 def nonzero(x: torch.Tensor) -> Tuple[torch.Tensor]:

@@ -387,9 +387,8 @@ def test_squeeze(
 
     # we need subset of size atleast 1, think of better way to do this
     # right now, we are just ignoring when we sample an empty subset
-    if not isinstance(axis, int):
-        if len(axis) == 0:
-            return
+    if not isinstance(axis, int) and len(axis) == 0:
+        return
 
     helpers.test_array_function(
         input_dtype,
@@ -838,18 +837,16 @@ def test_split(x_n_noss_n_axis_n_wr, dtype, data, tensor_fn, device, call, fw):
         expected_shape = ()
     elif isinstance(num_or_size_splits, int):
         expected_shape = tuple(
-            [
-                math.ceil(item / num_or_size_splits) if i == axis_val else item
-                for i, item in enumerate(x.shape)
-            ]
+            math.ceil(item / num_or_size_splits) if i == axis_val else item
+            for i, item in enumerate(x.shape)
         )
+
     else:
         expected_shape = tuple(
-            [
-                num_or_size_splits[0] if i == axis_val else item
-                for i, item in enumerate(x.shape)
-            ]
+            num_or_size_splits[0] if i == axis_val else item
+            for i, item in enumerate(x.shape)
         )
+
     assert ret[0].shape == expected_shape
     # value test
     pred_split = call(ivy.split, x, num_or_size_splits, axis, with_remainder)

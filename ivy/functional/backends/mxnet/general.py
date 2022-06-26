@@ -19,9 +19,7 @@ from ivy.functional.backends.mxnet import (
 
 def is_native_array(x, exclusive=False):
     if isinstance(x, mx.nd.NDArray):
-        if exclusive and x.grad is not None:
-            return False
-        return True
+        return not exclusive or x.grad is None
     return False
 
 
@@ -41,10 +39,7 @@ def to_numpy(x: mx.nd.NDArray) -> mx.nd.NDArray:
     if isinstance(x, np.ndarray):
         return x
     else:
-        if isinstance(x, (int, float)):
-            return np.array(x)
-        else:
-            return x.asnumpy()
+        return np.array(x) if isinstance(x, (int, float)) else x.asnumpy()
 
 
 def to_scalar(x: mx.nd.NDArray) -> Number:
@@ -142,8 +137,10 @@ def cumprod(
     if exclusive:
         array_stack = [mx.nd.ones_like(array_stack[0])] + array_stack[:-1]
     new_array_list = [array_stack[0]]
-    for array_chunk in array_stack[1:]:
-        new_array_list.append(new_array_list[-1] * array_chunk)
+    new_array_list.extend(
+        new_array_list[-1] * array_chunk for array_chunk in array_stack[1:]
+    )
+
     if ivy.exists(out):
         return ivy.inplace_update(out, mx.nd.concat(*new_array_list, dim=axis))
     return mx.nd.concat(*new_array_list, dim=axis)
@@ -164,8 +161,7 @@ def scatter_flat(
         )
     else:
         raise Exception(
-            "MXNet scatter_flat currently only supports reduction mode 'replace', "
-            "but {} selected.".format(reduction)
+            f"MXNet scatter_flat currently only supports reduction mode 'replace', but {reduction} selected."
         )
 
 
@@ -189,8 +185,7 @@ def scatter_nd(indices, updates, shape=None, tensor=None, reduction="sum", devic
         )
     else:
         raise Exception(
-            "MXNet scatter_nd currently only supports reduction mode 'replace', "
-            "but {} selected.".format(reduction)
+            f"MXNet scatter_nd currently only supports reduction mode 'replace', but {reduction} selected."
         )
 
 
@@ -212,11 +207,10 @@ def gather(
         dim=-1
     )
     res = mx.nd.reshape(res, indices.shape)
-    if ivy.exists(out):
-        out = _mxnet_init_context(device)
-        return res.copyto(out)
-    else:
+    if not ivy.exists(out):
         return res.copyto(_mxnet_init_context(device))
+    out = _mxnet_init_context(device)
+    return res.copyto(out)
 
 
 def gather_nd(params, indices, device=None):
@@ -240,10 +234,7 @@ def one_hot(indices, depth, device=None):
 
 
 def shape(x: mx.nd.NDArray, as_tensor: bool = False) -> Union[mx.nd.NDArray, List[int]]:
-    if as_tensor:
-        return mx.nd.shape_array(x)
-    else:
-        return x.shape
+    return mx.nd.shape_array(x) if as_tensor else x.shape
 
 
 def get_num_dims(x, as_tensor=False):

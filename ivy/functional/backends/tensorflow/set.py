@@ -37,13 +37,11 @@ def unique_all(
 
         indices[unique_nan] = nan_index
         indices[~unique_nan] = non_nan_index
-        indices = tf.convert_to_tensor(indices)
     else:
         indices = tf.experimental.numpy.array(
             [tensor_list.index(val) for val in values]
         )
-        indices = tf.convert_to_tensor(indices)
-
+    indices = tf.convert_to_tensor(indices)
     return UniqueAll(
         tf.cast(values, x.dtype),
         tf.cast(indices, dtype="int32"),
@@ -70,5 +68,4 @@ def unique_inverse(
 
 
 def unique_values(x: Union[tf.Tensor, tf.Variable]) -> Union[tf.Tensor, tf.Variable]:
-    ret = tf.unique(tf.reshape(x, [-1]))[0]
-    return ret
+    return tf.unique(tf.reshape(x, [-1]))[0]

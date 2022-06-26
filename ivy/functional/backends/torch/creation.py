@@ -30,10 +30,13 @@ def _differentiable_linspace(start, stop, num, device, dtype=None):
     increments = increment_tiled * torch.linspace(
         1, n_m_1, n_m_1, device=device, dtype=dtype
     )
-    res = torch.cat(
-        (torch.unsqueeze(torch.tensor(start, dtype=dtype), 0), start + increments), 0
+    return torch.cat(
+        (
+            torch.unsqueeze(torch.tensor(start, dtype=dtype), 0),
+            start + increments,
+        ),
+        0,
     )
-    return res
 
 
 # noinspection PyUnboundLocalVariable,PyShadowingNames
@@ -44,28 +47,27 @@ def arange(
         stop = start
         start = 0
     if (step > 0 and start > stop) or (step < 0 and start < stop):
-        if isinstance(stop, float):
-            stop = float(start)
-        else:
-            stop = start
-
+        stop = float(start) if isinstance(stop, float) else start
     device = as_native_dev(default_device(device))
 
     if dtype is None:
-        if isinstance(start, int) and isinstance(stop, int) and isinstance(step, int):
-            return torch.arange(
+        return (
+            torch.arange(
                 start, stop, step=step, dtype=torch.int64, device=device
             ).to(torch.int32)
-        else:
-            return torch.arange(start, stop, step=step, device=device)
+            if isinstance(start, int)
+            and isinstance(stop, int)
+            and isinstance(step, int)
+            else torch.arange(start, stop, step=step, device=device)
+        )
+
+    dtype = as_native_dtype(default_dtype(dtype))
+    if dtype in [torch.int8, torch.uint8, torch.int16]:
+        return torch.arange(
+            start, stop, step=step, dtype=torch.int64, device=device
+        ).to(dtype)
     else:
-        dtype = as_native_dtype(default_dtype(dtype))
-        if dtype in [torch.int8, torch.uint8, torch.int16]:
-            return torch.arange(
-                start, stop, step=step, dtype=torch.int64, device=device
-            ).to(dtype)
-        else:
-            return torch.arange(start, stop, step=step, dtype=dtype, device=device)
+        return torch.arange(start, stop, step=step, dtype=dtype, device=device)
 
 
 def asarray(
@@ -199,12 +201,14 @@ def linspace(
     dtype: torch.dtype,
     device: torch.device,
 ):
-    if not endpoint:
-        ans = linspace_helper(start, stop, num + 1, axis, device=device, dtype=dtype)[
-            :-1
-        ]
-    else:
-        ans = linspace_helper(start, stop, num, axis, device=device, dtype=dtype)
+    ans = (
+        linspace_helper(start, stop, num, axis, device=device, dtype=dtype)
+        if endpoint
+        else linspace_helper(
+            start, stop, num + 1, axis, device=device, dtype=dtype
+        )[:-1]
+    )
+
     if dtype is None:
         dtype = torch.float32
     ans = ans.type(dtype)
@@ -276,7 +280,7 @@ def linspace_helper(start, stop, num, axis=None, device=None, dtype=None):
                 for strt, stp in zip(start, stop)
             ]
         torch.cat(res, -1).reshape(start_shape + [num])
-    elif start_is_array and not stop_is_array:
+    elif start_is_array:
         if num < start.shape[0]:
             start = start.unsqueeze(-1)
             diff = stop - start
@@ -293,7 +297,7 @@ def linspace_helper(start, stop, num, axis=None, device=None, dtype=None):
                 )
                 for strt in start
             ]
-    elif not start_is_array and stop_is_array:
+    elif stop_is_array:
         if num < stop.shape[0]:
             stop = stop.unsqueeze(-1)
             diff = stop - start

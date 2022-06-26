@@ -19,10 +19,7 @@ def max(
     out: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     if axis == ():
-        if ivy.exists(out):
-            return ivy.inplace_update(out, x)
-        else:
-            return x
+        return ivy.inplace_update(out, x) if ivy.exists(out) else x
     if not keepdims and not axis and axis != 0:
         return torch.amax(input=x, out=out)
     return torch.amax(input=x, dim=axis, keepdim=keepdims, out=out)
@@ -39,10 +36,7 @@ def mean(
         num_dims = len(x.shape)
         axis = list(range(num_dims))
     if axis == ():
-        if ivy.exists(out):
-            return ivy.inplace_update(out, x)
-        else:
-            return x
+        return ivy.inplace_update(out, x) if ivy.exists(out) else x
     return torch.mean(x, dim=axis, keepdim=keepdims, out=out)
 
 
@@ -54,10 +48,7 @@ def min(
     out: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     if axis == ():
-        if ivy.exists(out):
-            return ivy.inplace_update(out, x)
-        else:
-            return x
+        return ivy.inplace_update(out, x) if ivy.exists(out) else x
     if not keepdims and not axis and axis != 0:
         return torch.amin(input=x, out=out)
     return torch.amin(input=x, dim=axis, keepdim=keepdims, out=out)
@@ -83,22 +74,24 @@ def prod(
 
     dtype = ivy.as_native_dtype(dtype)
 
-    if axis is None:
+    if (
+        axis is not None
+        and type(axis) == tuple
+        and len(axis) == 0
+        or axis is None
+    ):
         axis = x.dim() - 1
     elif type(axis) == tuple:
-        if len(axis) == 0:
-            axis = x.dim() - 1
-        else:
-            return torch.prod(
-                torch.Tensor(
-                    [
-                        torch.prod(input=x, dim=i, dtype=dtype, keepdim=keepdims)
-                        for i in axis
-                    ]
-                ),
-                dtype=dtype,
-                out=out,
-            )
+        return torch.prod(
+            torch.Tensor(
+                [
+                    torch.prod(input=x, dim=i, dtype=dtype, keepdim=keepdims)
+                    for i in axis
+                ]
+            ),
+            dtype=dtype,
+            out=out,
+        )
     return torch.prod(input=x, dim=axis, dtype=dtype, keepdim=keepdims, out=out)
 
 
@@ -116,7 +109,7 @@ def std(
     if isinstance(axis, int):
         return torch.std(x, dim=axis, keepdim=keepdims, unbiased=False, out=out)
     dims = len(x.shape)
-    axis = tuple([i % dims for i in axis])
+    axis = tuple(i % dims for i in axis)
     for i, a in enumerate(axis):
         if i == len(axis) - 1:
             x = torch.std(
@@ -189,7 +182,7 @@ def var(
     if isinstance(axis, int):
         return torch.var(x, dim=axis, keepdim=keepdims, unbiased=False, out=out)
     dims = len(x.shape)
-    axis = tuple([i % dims for i in axis])
+    axis = tuple(i % dims for i in axis)
     for i, a in enumerate(axis):
         if i == len(axis) - 1:
             x = torch.var(
